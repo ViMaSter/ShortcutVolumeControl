@@ -7,7 +7,7 @@ using System.Windows.Interop;
 
 namespace volumeStates
 {
-    class Hotkey
+    public class Hotkey
     {
         [DllImport("kernel32.dll")]
         public static extern uint GetLastError();
@@ -57,12 +57,6 @@ namespace volumeStates
             RegisterHotKey(key, (uint)modifier);
         }
 
-        ~Hotkey()
-        {
-            _source.RemoveHook(HwndHook);
-            _source = null;
-            UnregisterHotKey();
-        }
         private void RegisterHotKey(uint key, uint modifier)
         {
             var helper = new WindowInteropHelper(windowReference);
@@ -95,5 +89,12 @@ namespace volumeStates
 
         public delegate void OnHotKeyPressed();
         public OnHotKeyPressed onHotKeyPressed;
+
+        public void Unmap()
+        {
+            _source.RemoveHook(HwndHook);
+            _source = null;
+            UnregisterHotKey();
+        }
     }
 }

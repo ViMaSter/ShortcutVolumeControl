@@ -171,6 +171,30 @@ namespace volumeStates
         }
     }
 
+    public enum State
+    {
+        NONE = 0,
+        GAME,
+        VOICE
+    };
+
+    public class HotkeyCollection
+    {
+        private Dictionary<State, Hotkey> hotkeysByState = new Dictionary<State, Hotkey>
+        {
+            { State.GAME, null },
+            { State.VOICE, null }
+        };
+        public void SetKeyPerState(State state, Window parent, uint key, ModifierKeys modifier, Hotkey.OnHotKeyPressed action)
+        {
+            hotkeysByState[state]?.Unmap();
+            hotkeysByState[state] = new Hotkey(parent, key, modifier)
+            {
+                onHotKeyPressed = action
+            };
+        }
+    }
+
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
@@ -181,7 +205,7 @@ namespace volumeStates
             { State.VOICE, new AudioState() }
         };
         Dictionary<State, Tuple<ModifierKeys, Key>> keys = new Dictionary<State, Tuple<ModifierKeys, Key>>(2);
-        Dictionary<State, Hotkey> hotkeys = new Dictionary<State, Hotkey>(2);
+        HotkeyCollection hotkeys = new HotkeyCollection();
 
         AudioDevice currentAudioDevice = AudioUtilities.GetDefaultDevice();
 
@@ -249,13 +273,6 @@ namespace volumeStates
             RefreshAppList(currentAudioDevice);
         }
 
-        public enum State
-        {
-            NONE = 0,
-            GAME,
-            VOICE
-        }
-
         State SenderToState(object sender)
         {
             return (State)Enum.Parse(typeof(State), ((Button)sender).Tag.ToString());
@@ -303,10 +320,16 @@ namespace volumeStates
             if (buttonListenModal.ShowDialog() == true)
             {
                 keys[state] = new Tuple<ModifierKeys, Key>(buttonListenModal.Modifiers, buttonListenModal.PressedKey);
-                hotkeys[state] = new Hotkey(this, (uint)KeyInterop.VirtualKeyFromKey(keys[state].Item2), keys[state].Item1);
-                hotkeys[state].onHotKeyPressed = () => {
-                    currentAudioReflection.ApplyState(states[state], int.Parse(FadeSpeedInMS.Text));
-                };
+                hotkeys.SetKeyPerState(
+                    state,
+                    this,
+                    (uint)KeyInterop.VirtualKeyFromKey(keys[state].Item2),
+                    keys[state].Item1,
+                    () =>
+                    {
+                        currentAudioReflection.ApplyState(states[state], int.Parse(FadeSpeedInMS.Text));
+                    }
+                );
             }
         }
 
