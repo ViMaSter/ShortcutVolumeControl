@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:volumeStates"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="403.273">
+        Title="Volume state keyboard mapping" Height="450" Width="403.273">
     <Window.Resources>
         <local:VolumePercentageConverter x:Key="VolumePercentageConverter"></local:VolumePercentageConverter>
         <DataTemplate x:Key="AppEntry">
