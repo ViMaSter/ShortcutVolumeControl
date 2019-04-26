@@ -8,6 +8,7 @@
         Title="Volume state keyboard mapping" Height="450" Width="403.273">
     <Window.Resources>
         <local:VolumePercentageConverter x:Key="VolumePercentageConverter"></local:VolumePercentageConverter>
+        <local:DLLIconConverter x:Key="RefreshIcon" FileName="%WINDIR%\system32\imageres.dll" Number="228"></local:DLLIconConverter>
         <DataTemplate x:Key="AppEntry">
             <Grid VerticalAlignment="Top">
                 <Grid.ColumnDefinitions>
@@ -65,6 +66,13 @@
                 </Button.Content>
             </Button>
         </Grid>
+
+        <Button HorizontalAlignment="Right" Margin="0,13,10,0" VerticalAlignment="Top" Height="21" Width="21" Click="RefreshList" >
+            <Button.Content>
+                <Image Source="{Binding Path=DataContext, Converter={StaticResource RefreshIcon} }" Height="14" Width="14" />
+                <!--<Image Source="/volumeStates;component/Resources/Refresh.ico" Height="19" Width="19" />-->
+            </Button.Content>
+        </Button>
 
     </Grid>
 </Window>

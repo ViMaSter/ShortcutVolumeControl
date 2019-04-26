@@ -1,16 +1,74 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
+using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Interop;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace volumeStates
 {
+    internal static class IconUtilities
+    {
+        [DllImport("gdi32.dll", SetLastError = true)]
+        private static extern bool DeleteObject(IntPtr hObject);
+
+        public static ImageSource ToImageSource(this Icon icon)
+        {
+            Bitmap bitmap = icon.ToBitmap();
+            IntPtr hBitmap = bitmap.GetHbitmap();
+
+            ImageSource wpfBitmap = Imaging.CreateBitmapSourceFromHBitmap(
+                hBitmap,
+                IntPtr.Zero,
+                Int32Rect.Empty,
+                BitmapSizeOptions.FromEmptyOptions());
+
+            if (!DeleteObject(hBitmap))
+            {
+                throw new Win32Exception();
+            }
+
+            return wpfBitmap;
+        }
+    }
+
+    public class DLLIconConverter : IValueConverter
+    {
+        public string FileName { get; set; }
+        public int Number { get; set; }
+
+        [DllImport("Shell32.dll", EntryPoint = "ExtractIconExW", CharSet = CharSet.Unicode, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
+        private static extern int ExtractIconEx(string sFile, int iIndex, out IntPtr piLargeVersion, out IntPtr piSmallVersion, int amountIcons);
+
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            IntPtr large;
+            IntPtr small;
+            ExtractIconEx(FileName, Number, out large, out small, 1);
+            try
+            {
+                return Icon.FromHandle(large).ToImageSource();
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
     public class VolumePercentageConverter : IValueConverter
     {
         private double GetDoubleValue(object parameter, double defaultValue)
@@ -113,8 +171,10 @@ namespace volumeStates
         }
     }
 
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+
         Dictionary<State, AudioState> states = new Dictionary<State, AudioState>
         {
             { State.GAME, new AudioState() },
@@ -135,6 +195,7 @@ namespace volumeStates
             set
             {
                 _currentAudioReflection = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("currentAudioReflection"));
             }
         }
 
@@ -149,6 +210,8 @@ namespace volumeStates
                     AudioDeviceDropdown.Items.Add(device);
                 }
             }
+
+            currentAudioDevice = AudioUtilities.GetDefaultDevice();
 
             AudioDeviceDropdown.SelectedValue = currentAudioDevice.Id;
         }
@@ -249,7 +312,16 @@ namespace volumeStates
 
         private void AudioDeviceDropdown_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            currentAudioDevice = (AudioDevice)e.AddedItems[0];
+            if (e.AddedItems.Count > 0)
+            {
+                currentAudioDevice = (AudioDevice)e.AddedItems[0];
+                RefreshAppList(currentAudioDevice);
+            }
+        }
+
+        private void RefreshList(object sender, RoutedEventArgs e)
+        {
+            RefreshAudioDevices();
             RefreshAppList(currentAudioDevice);
         }
     }
