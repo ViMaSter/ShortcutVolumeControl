@@ -115,7 +115,11 @@ namespace volumeStates
 
     public partial class MainWindow : Window
     {
-        Dictionary<State, AudioState> states = new Dictionary<State, AudioState>(2);
+        Dictionary<State, AudioState> states = new Dictionary<State, AudioState>
+        {
+            { State.GAME, new AudioState() },
+            { State.VOICE, new AudioState() }
+        };
         Dictionary<State, Tuple<ModifierKeys, Key>> keys = new Dictionary<State, Tuple<ModifierKeys, Key>>(2);
         Dictionary<State, Hotkey> hotkeys = new Dictionary<State, Hotkey>(2);
 
