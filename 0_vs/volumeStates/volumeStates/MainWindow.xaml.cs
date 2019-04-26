@@ -60,7 +60,7 @@ namespace volumeStates
             Dictionary<string, float> appDefinitions = new Dictionary<string, float>();
             foreach (var session in sessionToThumbnail.Keys)
             {
-                appDefinitions.Add(session.ProcessPath, session.Volume);
+                appDefinitions[session.ProcessPath] = session.Volume;
             }
 
             return new AudioState { processPathToVolume = appDefinitions };
@@ -91,11 +91,10 @@ namespace volumeStates
                             while (endTime > DateTime.Now)
                             {
                                 TimeSpan offset = endTime - DateTime.Now;
-                                double value = 1 - ((double)offset.TotalMilliseconds / (double)lerpDuration.TotalMilliseconds);
+                                double value = 1 - (offset.TotalMilliseconds / lerpDuration.TotalMilliseconds);
                                 session.Volume = (float)Lerp(startValue, endValue, value);
                                 await Task.Delay(((int)((float)1/60) * 1000));
                             }
-
                             session.Volume = endValue;
                         }).ConfigureAwait(false);
                     }
@@ -217,7 +216,6 @@ namespace volumeStates
                 hotkeys[state] = new Hotkey(this, (uint)KeyInterop.VirtualKeyFromKey(keys[state].Item2), keys[state].Item1);
                 hotkeys[state].onHotKeyPressed = () => {
                     currentAudioReflection.ApplyState(states[state], int.Parse(FadeSpeedInMS.Text));
-                    RefreshAppList(currentAudioDevice);
                 };
             }
         }
