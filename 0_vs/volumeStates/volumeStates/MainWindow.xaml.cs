@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -54,7 +56,15 @@ namespace volumeStates
 
     public class AppReflection
     {
-        public Dictionary<AudioSession, BitmapSource> sessionToThumbnail = new Dictionary<AudioSession, BitmapSource>(2);
+        public Dictionary<AudioSession, BitmapSource> sessionToThumbnail
+        {
+            get
+            {
+                return _sessionToThumbnail;
+            }
+        }
+        public Dictionary<AudioSession, BitmapSource> _sessionToThumbnail = new Dictionary<AudioSession, BitmapSource>(2);
+
         public AudioState ToState()
         {
             Dictionary<string, float> appDefinitions = new Dictionary<string, float>();
@@ -110,7 +120,19 @@ namespace volumeStates
         Dictionary<State, Hotkey> hotkeys = new Dictionary<State, Hotkey>(2);
 
         AudioDevice currentAudioDevice = AudioUtilities.GetDefaultDevice();
-        AppReflection currentAudioReflection = new AppReflection();
+
+        AppReflection _currentAudioReflection = new AppReflection();
+        public AppReflection currentAudioReflection
+        {
+            get
+            {
+                return _currentAudioReflection;
+            }
+            set
+            {
+                _currentAudioReflection = value;
+            }
+        }
 
         public void RefreshAudioDevices()
         {
@@ -129,7 +151,7 @@ namespace volumeStates
 
         public void RefreshAppList(AudioDevice device)
         {
-            currentAudioReflection = new AppReflection();
+            AppReflection newReflection = new AppReflection();
             foreach (AudioSession session in AudioUtilities.GetAllSessions(device))
             {
                 if (session.Process != null)
@@ -143,17 +165,17 @@ namespace volumeStates
                                     new Int32Rect(0, 0, icon.Width, icon.Height),
                                     BitmapSizeOptions.FromEmptyOptions());
                     }
-                    
-                    currentAudioReflection.sessionToThumbnail.Add(session, source);
+
+                    newReflection.sessionToThumbnail.Add(session, source);
                 }
             }
-
-            AppList.ItemsSource = currentAudioReflection.sessionToThumbnail;
+            currentAudioReflection = newReflection;
         }
 
         public MainWindow()
         {
             InitializeComponent();
+            this.DataContext = this;
 
             RefreshAudioDevices();
 
@@ -179,6 +201,7 @@ namespace volumeStates
         }
 
         private State currentButtonSetState = State.NONE;
+
         public State CurrentButtonSetState
         {
             get

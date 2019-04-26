@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -574,16 +575,49 @@ namespace volumeStates
         }
     }
 
-    public sealed class AudioSession : IDisposable
+    public sealed class AudioSession : IDisposable, INotifyPropertyChanged
     {
         private AudioUtilities.IAudioSessionControl2 _ctl;
         private AudioUtilities.ISimpleAudioVolume _sav;
         private Process _process;
+        UpdateClass classInstance;
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         internal AudioSession(AudioUtilities.IAudioSessionControl2 ctl, AudioUtilities.ISimpleAudioVolume sav)
         {
             _ctl = ctl;
             _sav = sav;
+            classInstance = new UpdateClass(this);
+            _ctl.RegisterAudioSessionNotification(classInstance);
+        }
+
+        ~AudioSession()
+        {
+            if (classInstance != null)
+            {
+                _ctl.UnregisterAudioSessionNotification(classInstance);
+            }
+        }
+
+        public class UpdateClass : AudioUtilities.IAudioSessionEvents
+        {
+            AudioSession sessionReference;
+            public UpdateClass(AudioSession session)
+            {
+                sessionReference = session;
+            }
+
+            void AudioUtilities.IAudioSessionEvents.OnChannelVolumeChanged(int ChannelCount, IntPtr NewChannelVolumeArray, int ChangedChannel, Guid EventContext) {}
+            void AudioUtilities.IAudioSessionEvents.OnDisplayNameChanged(string NewDisplayName, Guid EventContext){}
+            void AudioUtilities.IAudioSessionEvents.OnGroupingParamChanged(Guid NewGroupingParam, Guid EventContext){}
+            void AudioUtilities.IAudioSessionEvents.OnIconPathChanged(string NewIconPath, Guid EventContext){}
+            void AudioUtilities.IAudioSessionEvents.OnSessionDisconnected(AudioSessionDisconnectReason DisconnectReason){}
+            void AudioUtilities.IAudioSessionEvents.OnSimpleVolumeChanged(float NewVolume, bool NewMute, Guid EventContext)
+            {
+                sessionReference.PropertyChanged?.Invoke(sessionReference, new PropertyChangedEventArgs("Volume"));
+            }
+            void AudioUtilities.IAudioSessionEvents.OnStateChanged(AudioSessionState NewState){}
         }
 
         public Process Process
@@ -715,6 +749,7 @@ namespace volumeStates
             {
                 CheckDisposed();
                 int a = _sav.SetMasterVolume(value, Guid.Empty);
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Volume"));
             }
         }
 
