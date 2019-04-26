@@ -6,10 +6,37 @@
         xmlns:local="clr-namespace:volumeStates"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="403.273">
+    <Window.Resources>
+        <local:VolumePercentageConverter x:Key="VolumePercentageConverter"></local:VolumePercentageConverter>
+        <DataTemplate x:Key="AppEntry">
+            <Grid VerticalAlignment="Top">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="9*" />
+                    <ColumnDefinition Width="1*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="1*" />
+                    <RowDefinition Height="1*" />
+                </Grid.RowDefinitions>
+                <Image Grid.Column="0" Grid.Row="0" Margin="0,0,0,0" Grid.RowSpan="2" Width="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Grid}, Path=ActualHeight}" Height="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Grid}, Path=ActualHeight}" Source="{Binding DataContext.Value, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Grid}}"/>
+                <Label Grid.Column="1" Grid.Row="0" Margin="5,0,15,0" Content="{Binding DataContext.Key.Process.ProcessName, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Grid}}"/>
+                <Slider Grid.Column="1" Grid.Row="1" Margin="10,5,10,0" Minimum="0" Maximum="1" SmallChange="0.01" LargeChange="0.2" Value="{Binding DataContext.Key.Volume, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Grid}}"/>
+                <Label Grid.Column="2" Grid.Row="1" Margin="0,0,0,0" Content="{Binding DataContext.Key.Volume, Converter={StaticResource VolumePercentageConverter}, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Grid}}"/>
+            </Grid>
+        </DataTemplate>
+    </Window.Resources>
     <Grid>
-        <ComboBox SelectedValuePath="Id" DisplayMemberPath="FriendlyName" Name="AudioDeviceDropdown" Margin="10,36,10,0" VerticalAlignment="Top"/>
+        <ComboBox SelectedValuePath="Id" DisplayMemberPath="FriendlyName" Name="AudioDeviceDropdown" Margin="10,36,10,0" VerticalAlignment="Top" SelectionChanged="AudioDeviceDropdown_SelectionChanged"/>
         <Label Content="Audio device:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
-        <Grid HorizontalAlignment="Left" Height="127" Margin="10,285,0,0" VerticalAlignment="Top" Width="378">
+        <ScrollViewer Margin="10,63,10.5,180.5">
+            <ListView Name="AppList" ItemTemplate="{StaticResource AppEntry}" HorizontalContentAlignment="Stretch"/>
+
+        </ScrollViewer>
+        <Label Content="Fade speed (ms):" Margin="10,247,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="104"/>
+        <TextBox Name="FadeSpeedInMS" Height="23" Margin="114,251,10,0" TextWrapping="NoWrap" Text="250" VerticalAlignment="Top" PreviewKeyUp="PreviewFadeSpeedInput"/>
+
+        <Grid Height="127" Margin="10,0,10,10" VerticalAlignment="Bottom">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1*" />
                 <ColumnDefinition Width="1*" />

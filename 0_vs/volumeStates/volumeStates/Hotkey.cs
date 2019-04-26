@@ -85,7 +85,7 @@ namespace volumeStates
                 case WM_HOTKEY:
                     if (wParam.ToInt32() == hotkeyID)
                     {
-                        OnHotKeyPressed();
+                        onHotKeyPressed();
                         handled = true;
                     }
                     break;
@@ -93,9 +93,7 @@ namespace volumeStates
             return IntPtr.Zero;
         }
 
-        private void OnHotKeyPressed()
-        {
-            // do stuff
-        }
+        public delegate void OnHotKeyPressed();
+        public OnHotKeyPressed onHotKeyPressed;
     }
 }

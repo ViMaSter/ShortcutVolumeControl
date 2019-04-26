@@ -2,28 +2,23 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace volumeStates
 {
     public static class AudioUtilities
     {
-        private static IAudioSessionManager2 GetAudioSessionManager()
+        private static IAudioSessionManager2 GetAudioSessionManager(IMMDevice device)
         {
-            IMMDevice speakers = GetSpeakers();
-            if (speakers == null)
+            if (device == null)
                 return null;
 
             // win7+ only
             object o;
-            if (speakers.Activate(typeof(IAudioSessionManager2).GUID, 0, IntPtr.Zero, out o) != 0 || o == null)
+            if (device.Activate(typeof(IAudioSessionManager2).GUID, 0, IntPtr.Zero, out o) != 0 || o == null)
                 return null;
 
             return o as IAudioSessionManager2;
-        }
-
-        public static AudioDevice GetDefaultSpeaker()
-        {
-            return CreateDevice(GetSpeakers());
         }
 
         private static AudioDevice CreateDevice(IMMDevice dev)
@@ -101,7 +96,7 @@ namespace volumeStates
             return list;
         }
 
-        private static IMMDevice GetSpeakers()
+        private static IMMDevice GetDefaultSpeakers()
         {
             // get the speakers (1st render + multimedia) device
             try
@@ -117,10 +112,19 @@ namespace volumeStates
             }
         }
 
-        public static IList<AudioSession> GetAllSessions()
+        public static AudioDevice GetDefaultDevice()
+        {
+            return CreateDevice(GetDefaultSpeakers());
+        }
+
+        public static IList<AudioSession> GetAllSessions(AudioDevice device)
         {
             List<AudioSession> list = new List<AudioSession>();
-            IAudioSessionManager2 mgr = GetAudioSessionManager();
+            IMMDeviceEnumerator deviceEnumerator = (IMMDeviceEnumerator)(new MMDeviceEnumerator());
+            IMMDevice immDevice;
+            deviceEnumerator.GetDevice(device.Id, out immDevice);
+            Debug.Assert(immDevice != null, "Unable to retrieve IMMDevice with EnumeratorName of AudioDevice");
+            IAudioSessionManager2 mgr = GetAudioSessionManager(immDevice);
             if (mgr == null)
                 return list;
 
@@ -151,7 +155,7 @@ namespace volumeStates
         public static AudioSession GetProcessSession()
         {
             int id = Process.GetCurrentProcess().Id;
-            foreach (AudioSession session in GetAllSessions())
+            foreach (AudioSession session in GetAllSessions(CreateDevice(GetDefaultSpeakers())))
             {
                 if (session.ProcessId == id)
                     return session;
@@ -160,6 +164,31 @@ namespace volumeStates
             }
             return null;
         }
+
+        [Flags]
+        public enum ProcessAccessFlags : uint
+        {
+            All = 0x001F0FFF,
+            Terminate = 0x00000001,
+            CreateThread = 0x00000002,
+            VirtualMemoryOperation = 0x00000008,
+            VirtualMemoryRead = 0x00000010,
+            VirtualMemoryWrite = 0x00000020,
+            DuplicateHandle = 0x00000040,
+            CreateProcess = 0x000000080,
+            SetQuota = 0x00000100,
+            SetInformation = 0x00000200,
+            QueryInformation = 0x00000400,
+            QueryLimitedInformation = 0x00001000,
+            Synchronize = 0x00100000
+        }
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern IntPtr OpenProcess(
+             ProcessAccessFlags processAccess,
+             bool bInheritHandle,
+             int processId
+        );
 
         [DllImport("ole32.dll")]
         private static extern int PropVariantClear(ref PROPVARIANT pvar);
@@ -524,6 +553,25 @@ namespace volumeStates
             [PreserveSig]
             int GetMute(out bool pbMute);
         }
+
+        [DllImport("Kernel32.dll")]
+        public static extern bool QueryFullProcessImageName([In] IntPtr hProcess, [In] uint dwFlags, [Out] StringBuilder lpExeName, [In, Out] ref int lpdwSize);
+
+        public static string GetMainModuleFileName(this Process process, int buffer = 1024)
+        {
+            var fileNameBuilder = new StringBuilder(buffer);
+            int bufferLength = fileNameBuilder.Capacity + 1;
+            try
+            {
+                return QueryFullProcessImageName(process.Handle, 0, fileNameBuilder, ref bufferLength) ?
+                    fileNameBuilder.ToString() :
+                    null;
+            }
+            catch (Exception e)
+            {
+                return null;
+            }
+        }
     }
 
     public sealed class AudioSession : IDisposable
@@ -554,6 +602,22 @@ namespace volumeStates
                     }
                 }
                 return _process;
+            }
+        }
+
+        public string ProcessPath
+        {
+            get
+            {
+                int capacity = 2000;
+                StringBuilder builder = new StringBuilder(capacity);
+                IntPtr ptr = AudioUtilities.OpenProcess(AudioUtilities.ProcessAccessFlags.QueryLimitedInformation, false, ProcessId);
+                if (!AudioUtilities.QueryFullProcessImageName(ptr, 0, builder, ref capacity))
+                {
+                    return String.Empty;
+                }
+
+                return builder.ToString();
             }
         }
 
@@ -660,7 +724,8 @@ namespace volumeStates
             {
                 CheckDisposed();
                 string s;
-                _ctl.GetIconPath(out s);
+                int errorCode = _ctl.GetIconPath(out s);
+                Debug.Assert(errorCode == 0, "Couldn't receive icon information! Error: " + errorCode);
                 return s;
             }
             set
