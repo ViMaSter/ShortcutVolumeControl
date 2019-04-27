@@ -6,14 +6,7 @@ using System.Windows.Media.Imaging;
 
 namespace VolumeControl.States
 {
-    public enum State
-    {
-        NONE = 0,
-        GAME,
-        VOICE
-    };
-
-    public class AudioState
+    public class AppStatus
     {
         public Dictionary<string, float> processPathToVolume = new Dictionary<string, float>(2);
     }
@@ -27,9 +20,13 @@ namespace VolumeControl.States
                 return _sessionToThumbnail;
             }
         }
+
         public Dictionary<AudioSession, BitmapSource> _sessionToThumbnail = new Dictionary<AudioSession, BitmapSource>(2);
 
-        public AudioState ToState()
+        private int _fadeInMS = 250;
+        public int FadeInMS { get => _fadeInMS; set => _fadeInMS = value; }
+
+        public AppStatus ToState()
         {
             Dictionary<string, float> appDefinitions = new Dictionary<string, float>();
             foreach (var session in sessionToThumbnail.Keys)
@@ -37,7 +34,7 @@ namespace VolumeControl.States
                 appDefinitions[session.ProcessPath] = session.Volume;
             }
 
-            return new AudioState { processPathToVolume = appDefinitions };
+            return new AppStatus { processPathToVolume = appDefinitions };
         }
 
         private double Lerp(double a, double b, double t)
@@ -45,7 +42,7 @@ namespace VolumeControl.States
             return a * (1 - t) + b * t;
         }
 
-        public void ApplyState(AudioState state, int fadeSpeedInMS)
+        public void ApplyState(AppStatus state)
         {
             foreach (var definition in state.processPathToVolume)
             {
@@ -58,7 +55,7 @@ namespace VolumeControl.States
                             float startValue = session.Volume;
                             float endValue = definition.Value;
 
-                            TimeSpan lerpDuration = new TimeSpan(fadeSpeedInMS * 10000);
+                            TimeSpan lerpDuration = new TimeSpan(FadeInMS * 10000);
                             DateTime startTime = DateTime.Now;
                             DateTime endTime = DateTime.Now + lerpDuration;
 

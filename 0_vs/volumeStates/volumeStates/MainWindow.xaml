@@ -29,44 +29,19 @@
         </DataTemplate>
     </Window.Resources>
     <Grid>
-        <ComboBox SelectedValuePath="Id" DisplayMemberPath="FriendlyName" Name="AudioDeviceDropdown" Margin="10,36,10,0" VerticalAlignment="Top" SelectionChanged="AudioDeviceDropdown_SelectionChanged"/>
+        <ComboBox SelectedValuePath="Id" DisplayMemberPath="FriendlyName" Name="AudioDeviceDropdown" Margin="10,36,10,0" VerticalAlignment="Top" SelectionChanged="OnAudioDeviceDropdownChanged"/>
         <Label Content="Audio device:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
         <ScrollViewer Margin="10,63,10.5,180.5">
-            <ListView Name="AppList" ItemTemplate="{StaticResource AppEntry}" ItemsSource="{Binding DataContext.currentAudioReflection.sessionToThumbnail, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MainWindow}}}" HorizontalContentAlignment="Stretch"/>
+            <ListView Name="AppList" ItemTemplate="{StaticResource AppEntry}" ItemsSource="{Binding DataContext.CurrentAudioReflection.sessionToThumbnail, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MainWindow}}}" HorizontalContentAlignment="Stretch"/>
         </ScrollViewer>
         <Label Content="Fade speed (ms):" Margin="10,0,0,144" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="104"/>
-        <TextBox Name="FadeSpeedInMS" Height="23" Margin="114,0,10,143" TextWrapping="NoWrap" Text="250" VerticalAlignment="Bottom" PreviewKeyUp="PreviewFadeSpeedInput"/>
+        <TextBox Name="FadeSpeedInMS" Height="23" Margin="114,0,10,143" TextWrapping="NoWrap" Text="250" VerticalAlignment="Bottom" PreviewKeyUp="OnPreviewFadeSpeedInput"/>
 
-        <Grid Height="127" Margin="10,0,10,10" VerticalAlignment="Bottom">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1*" />
-                <ColumnDefinition Width="1*" />
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="1*" />
-                <RowDefinition Height="1*" />
-            </Grid.RowDefinitions>
-            <Button Tag="GAME" Grid.Column="0" Grid.Row="0" Click="SetState">
-                <Button.Content>
-                    <TextBlock Text="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}, Path=Tag, StringFormat='Set \{0\} state'}"></TextBlock>
-                </Button.Content>
-            </Button>
-            <Button Tag="GAME" Grid.Column="0" Grid.Row="1" Click="SetButton">
-                <Button.Content>
-                    <TextBlock Text="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}, Path=Tag, StringFormat='Set \{0\} button'}"></TextBlock>
-                </Button.Content>
-            </Button>
-            <Button Tag="VOICE" Grid.Column="1" Grid.Row="0" Click="SetState">
-                <Button.Content>
-                    <TextBlock Text="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}, Path=Tag, StringFormat='Set \{0\} state'}"></TextBlock>
-                </Button.Content>
-            </Button>
-            <Button Tag="VOICE" Grid.Column="1" Grid.Row="1" Click="SetButton">
-                <Button.Content>
-                    <TextBlock Text="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}, Path=Tag, StringFormat='Set \{0\} button'}"></TextBlock>
-                </Button.Content>
-            </Button>
-        </Grid>
+        <Button Tag="VOICE" Height="127" Margin="10,0,10,10" VerticalAlignment="Bottom" Click="OnSetStateClick">
+            <Button.Content>
+                <TextBlock Text="Set state"></TextBlock>
+            </Button.Content>
+        </Button>
 
         <Button HorizontalAlignment="Right" Margin="0,13,10,0" VerticalAlignment="Top" Height="21" Width="21" Click="RefreshList" >
             <Button.Content>

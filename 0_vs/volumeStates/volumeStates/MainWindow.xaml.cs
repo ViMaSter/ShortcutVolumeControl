@@ -1,7 +1,5 @@
 ﻿using VolumeControl.AudioWrapper;
 using VolumeControl.States;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -12,20 +10,12 @@ namespace volumeStates
 {
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
+        #region members
         public event PropertyChangedEventHandler PropertyChanged;
 
-        Dictionary<State, AudioState> states = new Dictionary<State, AudioState>
-        {
-            { State.GAME, new AudioState() },
-            { State.VOICE, new AudioState() }
-        };
-        Dictionary<State, Tuple<ModifierKeys, Key>> keys = new Dictionary<State, Tuple<ModifierKeys, Key>>(2);
-        HotkeyCollection hotkeys = new HotkeyCollection();
-
-        AudioDevice currentAudioDevice = AudioUtilities.GetDefaultDevice();
-
+        AudioDevice CurrentAudioDevice = AudioUtilities.GetDefaultDevice();
         AppReflection _currentAudioReflection = new AppReflection();
-        public AppReflection currentAudioReflection
+        public AppReflection CurrentAudioReflection
         {
             get
             {
@@ -34,10 +24,22 @@ namespace volumeStates
             set
             {
                 _currentAudioReflection = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("currentAudioReflection"));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("CurrentAudioReflection"));
             }
         }
+        HotkeyCollection hotkeys = null;
+        #endregion
 
+        public MainWindow()
+        {
+            InitializeComponent();
+            this.DataContext = this;
+            hotkeys = new HotkeyCollection(() => CurrentAudioReflection);
+
+            RefreshAudioDevices();
+        }
+
+        #region audio data
         public void RefreshAudioDevices()
         {
             AudioDeviceDropdown.Items.Clear();
@@ -50,14 +52,15 @@ namespace volumeStates
                 }
             }
 
-            currentAudioDevice = AudioUtilities.GetDefaultDevice();
+            CurrentAudioDevice = AudioUtilities.GetDefaultDevice();
 
-            AudioDeviceDropdown.SelectedValue = currentAudioDevice.Id;
+            AudioDeviceDropdown.SelectedValue = CurrentAudioDevice.Id;
         }
 
         public void RefreshAppList(AudioDevice device)
         {
             AppReflection newReflection = new AppReflection();
+            newReflection.FadeInMS = CurrentAudioReflection.FadeInMS;
             foreach (AudioSession session in AudioUtilities.GetAllSessions(device))
             {
                 if (session.Process != null)
@@ -75,78 +78,57 @@ namespace volumeStates
                     newReflection.sessionToThumbnail.Add(session, source);
                 }
             }
-            currentAudioReflection = newReflection;
+            CurrentAudioReflection = newReflection;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("CurrentAudioReflection"));
         }
 
-        public MainWindow()
+        private void RefreshList(object sender, RoutedEventArgs e)
         {
-            InitializeComponent();
-            this.DataContext = this;
-
             RefreshAudioDevices();
-
-            RefreshAppList(currentAudioDevice);
         }
+        #endregion
 
-        State SenderToState(object sender)
+        #region UI callbacks
+        private void OnAudioDeviceDropdownChanged(object sender, SelectionChangedEventArgs e)
         {
-            return (State)Enum.Parse(typeof(State), ((Button)sender).Tag.ToString());
+            if (e.AddedItems.Count > 0)
+            {
+                CurrentAudioDevice = (AudioDevice)e.AddedItems[0];
+                RefreshAppList(CurrentAudioDevice);
+            }
         }
 
-        private void SetState(object sender, RoutedEventArgs e)
-        {
-            State state = SenderToState(sender);
-            states[state] = currentAudioReflection.ToState();
-        }
-
-        public void PreviewFadeSpeedInput(object sender, KeyEventArgs e)
+        public void OnPreviewFadeSpeedInput(object sender, KeyEventArgs e)
         {
             if (((TextBox)sender).Text.Length == 0)
             {
                 ((TextBox)sender).Text = "0";
             }
 
-            int a;
-            if (!int.TryParse(((TextBox)sender).Text, out a))
+            int newValue;
+            if (!int.TryParse(((TextBox)sender).Text, out newValue))
             {
                 e.Handled = true;
             }
+            else
+            {
+                CurrentAudioReflection.FadeInMS = newValue;
+            }
         }
 
-        private void SetButton(object sender, RoutedEventArgs e)
+        private void OnSetStateClick(object sender, RoutedEventArgs e)
         {
-            State state = SenderToState(sender);
-
             ButtonListenModal buttonListenModal = new ButtonListenModal();
             if (buttonListenModal.ShowDialog() == true)
             {
-                keys[state] = new Tuple<ModifierKeys, Key>(buttonListenModal.Modifiers, buttonListenModal.PressedKey);
                 hotkeys.SetKeyPerState(
-                    state,
-                    this,
-                    (uint)KeyInterop.VirtualKeyFromKey(keys[state].Item2),
-                    keys[state].Item1,
-                    () =>
-                    {
-                        currentAudioReflection.ApplyState(states[state], int.Parse(FadeSpeedInMS.Text));
-                    }
+                    buttonListenModal.Modifiers,
+                    buttonListenModal.PressedKey,
+                    CurrentAudioReflection.ToState()
                 );
             }
         }
+        #endregion
 
-        private void AudioDeviceDropdown_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (e.AddedItems.Count > 0)
-            {
-                currentAudioDevice = (AudioDevice)e.AddedItems[0];
-                RefreshAppList(currentAudioDevice);
-            }
-        }
-
-        private void RefreshList(object sender, RoutedEventArgs e)
-        {
-            RefreshAudioDevices();
-            RefreshAppList(currentAudioDevice);
-        }
     }
 }
