@@ -73,16 +73,24 @@ namespace VolumeControl.AudioWrapper
                 #endregion
 
                 private Action onHotKeyPressed;
+                private ModifierKeys modifierKeys;
+                private Key keyToUse;
 
                 public WindowsHotkey(ModifierKeys modifier, Key key, Action pressedEvent)
                 {
-                    onHotKeyPressed = pressedEvent;
+                    modifierKeys = modifier;
+                    keyToUse = key;
 
-                    uint keyCode = (uint)KeyInterop.VirtualKeyFromKey(key);
+                    onHotKeyPressed = pressedEvent;
+                }
+
+                public void Map()
+                {
                     var helper = new WindowInteropHelper(Application.Current.MainWindow);
                     _source = HwndSource.FromHwnd(helper.Handle);
                     _source.AddHook(HwndHook);
-                    RegisterHotKey(keyCode, (uint)modifier);
+                    uint keyCode = (uint)KeyInterop.VirtualKeyFromKey(keyToUse);
+                    RegisterHotKey(keyCode, (uint)modifierKeys);
                 }
 
                 public void Unmap()
@@ -106,6 +114,11 @@ namespace VolumeControl.AudioWrapper
                 appStatusReference = appStatus;
             }
 
+            public void Map()
+            {
+                windowsHotkey.Map();
+            }
+
             public void Unmap()
             {
                 windowsHotkey.Unmap();
@@ -123,16 +136,27 @@ namespace VolumeControl.AudioWrapper
         public void SetKeyPerState(ModifierKeys modifier, Key key, AppStatus appStatus)
         {
             Tuple<ModifierKeys, Key> mapping = new Tuple<ModifierKeys, Key>(modifier, key);
-            
-            if (hotkeysByState.ContainsKey(mapping))
-            {
-                hotkeysByState[mapping].Unmap();
-            }
 
             hotkeysByState[mapping] = new AudioState
             (
                 modifier, key, appStatus, () => GetReflection().ApplyState(hotkeysByState[mapping].AppStatusReference)
             );
+        }
+
+        public void EnableAllHotkeys()
+        {
+            foreach (var mapping in hotkeysByState)
+            {
+                mapping.Value.Map();
+            }
+        }
+
+        public void DisableAllHotkeys()
+        {
+            foreach (var mapping in hotkeysByState)
+            {
+                mapping.Value.Unmap();
+            }
         }
     }
 }

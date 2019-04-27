@@ -118,6 +118,7 @@ namespace volumeStates
 
         private void OnSetStateClick(object sender, RoutedEventArgs e)
         {
+            hotkeys.DisableAllHotkeys();
             ButtonListenModal buttonListenModal = new ButtonListenModal();
             if (buttonListenModal.ShowDialog() == true)
             {
@@ -127,6 +128,7 @@ namespace volumeStates
                     CurrentAudioReflection.ToState()
                 );
             }
+            hotkeys.EnableAllHotkeys();
         }
         #endregion
 
