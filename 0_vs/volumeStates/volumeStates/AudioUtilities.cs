@@ -5,7 +5,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace volumeStates
+namespace VolumeControl.AudioWrapper
 {
     public static class AudioUtilities
     {
@@ -568,7 +568,7 @@ namespace volumeStates
                     fileNameBuilder.ToString() :
                     null;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return null;
             }

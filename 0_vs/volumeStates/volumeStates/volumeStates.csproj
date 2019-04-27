@@ -117,11 +117,14 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="AudioStates.cs" />
     <Compile Include="AudioUtilities.cs" />
     <Compile Include="ButtonListenModal.xaml.cs">
       <DependentUpon>ButtonListenModal.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ContentConverter.cs" />
     <Compile Include="Hotkey.cs" />
+    <Compile Include="IconUtilities.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>

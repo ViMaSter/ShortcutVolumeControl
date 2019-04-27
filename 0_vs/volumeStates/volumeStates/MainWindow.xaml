@@ -4,11 +4,12 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:volumeStates"
+        xmlns:customconverter="clr-namespace:VolumeControl.Converter"
         mc:Ignorable="d"
         Title="Volume state keyboard mapping" Height="450" Width="403.273">
     <Window.Resources>
-        <local:VolumePercentageConverter x:Key="VolumePercentageConverter"></local:VolumePercentageConverter>
-        <local:DLLIconConverter x:Key="RefreshIcon" FileName="%WINDIR%\system32\imageres.dll" Number="228"></local:DLLIconConverter>
+        <customconverter:VolumePercentageConverter x:Key="VolumePercentageConverter"></customconverter:VolumePercentageConverter>
+        <customconverter:DLLIconConverter x:Key="RefreshIcon" FileName="%WINDIR%\system32\imageres.dll" Number="228"></customconverter:DLLIconConverter>
         <DataTemplate x:Key="AppEntry">
             <Grid VerticalAlignment="Top">
                 <Grid.ColumnDefinitions>

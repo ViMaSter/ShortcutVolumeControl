@@ -31,7 +31,7 @@ namespace volumeStates
             DialogResult = false;
         }
 
-        private new void OnKeyUp(object sender, KeyEventArgs e)
+        private void OnKeyUp(object sender, KeyEventArgs e)
         {
             Modifiers = Keyboard.Modifiers;
             PressedKey = e.Key;

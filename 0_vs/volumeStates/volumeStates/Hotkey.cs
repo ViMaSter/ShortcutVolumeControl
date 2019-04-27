@@ -1,12 +1,31 @@
-﻿using System;
+﻿using VolumeControl.States;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
 
-namespace volumeStates
+namespace VolumeControl.AudioWrapper
 {
+    public class HotkeyCollection
+    {
+        private Dictionary<State, Hotkey> hotkeysByState = new Dictionary<State, Hotkey>
+        {
+            { State.GAME, null },
+            { State.VOICE, null }
+        };
+        public void SetKeyPerState(State state, Window parent, uint key, ModifierKeys modifier, Hotkey.OnHotKeyPressed action)
+        {
+            hotkeysByState[state]?.Unmap();
+            hotkeysByState[state] = new Hotkey(parent, key, modifier)
+            {
+                onHotKeyPressed = action
+            };
+        }
+    }
+
     public class Hotkey
     {
         [DllImport("kernel32.dll")]
