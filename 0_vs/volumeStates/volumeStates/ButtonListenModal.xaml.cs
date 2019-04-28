@@ -19,8 +19,16 @@ namespace volumeStates
     /// </summary>
     public partial class ButtonListenModal : Window
     {
-        public ModifierKeys Modifiers;
-        public Key PressedKey;
+        private ModifierKeys modifiers;
+        public ModifierKeys Modifiers
+        {
+            get { return modifiers; }
+        }
+        private Key pressedKey;
+        public Key PressedKey
+        {
+            get { return pressedKey; }
+        }
         public ButtonListenModal()
         {
             InitializeComponent();
@@ -33,8 +41,8 @@ namespace volumeStates
 
         private void OnKeyUp(object sender, KeyEventArgs e)
         {
-            Modifiers = Keyboard.Modifiers;
-            PressedKey = e.Key;
+            modifiers = Keyboard.Modifiers;
+            pressedKey = e.Key;
             DialogResult = true;
         }
     }

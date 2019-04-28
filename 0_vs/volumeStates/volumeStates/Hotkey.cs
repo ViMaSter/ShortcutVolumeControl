@@ -60,15 +60,21 @@ namespace VolumeControl.AudioWrapper
                 private void RegisterHotKey(uint key, uint modifier)
                 {
                     var helper = new WindowInteropHelper(Application.Current.MainWindow);
-                    uint a = RegisterHotKey(helper.Handle, hotkeyID, modifier, key);
-                    Debug.Assert(a != 0, "Couldn't register hotkey");
+                    uint winAPIResult = RegisterHotKey(helper.Handle, hotkeyID, modifier, key);
+                    if (winAPIResult != 0)
+                    {
+                        throw new SystemException("Couldn't register hotkey - error code: " + winAPIResult);
+                    }
                 }
 
                 private void UnregisterHotKey()
                 {
                     var helper = new WindowInteropHelper(Application.Current.MainWindow);
-                    uint a = UnregisterHotKey(helper.Handle, hotkeyID);
-                    Debug.Assert(a != 0, "Couldn't unregister hotkey");
+                    uint winAPIResult = UnregisterHotKey(helper.Handle, hotkeyID);
+                    if (winAPIResult != 0)
+                    {
+                        throw new SystemException("Couldn't unregister hotkey - error code: " + winAPIResult);
+                    }
                 }
                 #endregion
 
@@ -84,7 +90,7 @@ namespace VolumeControl.AudioWrapper
                     onHotKeyPressed = pressedEvent;
                 }
 
-                public void Map()
+                public void Activate()
                 {
                     var helper = new WindowInteropHelper(Application.Current.MainWindow);
                     _source = HwndSource.FromHwnd(helper.Handle);
@@ -93,7 +99,7 @@ namespace VolumeControl.AudioWrapper
                     RegisterHotKey(keyCode, (uint)modifierKeys);
                 }
 
-                public void Unmap()
+                public void Deactivate()
                 {
                     _source.RemoveHook(HwndHook);
                     _source = null;
@@ -114,14 +120,14 @@ namespace VolumeControl.AudioWrapper
                 appStatusReference = appStatus;
             }
 
-            public void Map()
+            public void Activate()
             {
-                windowsHotkey.Map();
+                windowsHotkey.Activate();
             }
 
-            public void Unmap()
+            public void Deactivate()
             {
-                windowsHotkey.Unmap();
+                windowsHotkey.Deactivate();
             }
         }
 
@@ -147,7 +153,7 @@ namespace VolumeControl.AudioWrapper
         {
             foreach (var mapping in hotkeysByState)
             {
-                mapping.Value.Map();
+                mapping.Value.Activate();
             }
         }
 
@@ -155,7 +161,7 @@ namespace VolumeControl.AudioWrapper
         {
             foreach (var mapping in hotkeysByState)
             {
-                mapping.Value.Unmap();
+                mapping.Value.Deactivate();
             }
         }
     }

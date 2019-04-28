@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
+using System.Diagnostics;
 
 namespace volumeStates
 {
@@ -75,7 +76,7 @@ namespace volumeStates
                                     BitmapSizeOptions.FromEmptyOptions());
                     }
 
-                    newReflection.sessionToThumbnail.Add(session, source);
+                    newReflection.SessionToThumbnail.Add(session, source);
                 }
             }
             CurrentAudioReflection = newReflection;
@@ -98,22 +99,21 @@ namespace volumeStates
             }
         }
 
-        public void OnPreviewFadeSpeedInput(object sender, KeyEventArgs e)
+        public void OnPreviewFadeSpeedInput(object sender, RoutedEventArgs e)
         {
-            if (((TextBox)sender).Text.Length == 0)
+            TextBox senderBox = (TextBox)sender;
+            
+            int newValue;
+            if (!int.TryParse(senderBox.Text, out newValue))
             {
-                ((TextBox)sender).Text = "0";
+                if (e != null)
+                {
+                    e.Handled = true;
+                }
+                newValue = 0;
             }
 
-            int newValue;
-            if (!int.TryParse(((TextBox)sender).Text, out newValue))
-            {
-                e.Handled = true;
-            }
-            else
-            {
-                CurrentAudioReflection.FadeInMS = newValue;
-            }
+            CurrentAudioReflection.FadeInMS = newValue;
         }
 
         private void OnSetStateClick(object sender, RoutedEventArgs e)

@@ -9,7 +9,7 @@
         Title="Volume state keyboard mapping" Height="450" Width="403.273">
     <Window.Resources>
         <customconverter:VolumePercentageConverter x:Key="VolumePercentageConverter"></customconverter:VolumePercentageConverter>
-        <customconverter:DLLIconConverter x:Key="RefreshIcon" FileName="%WINDIR%\system32\imageres.dll" Number="228"></customconverter:DLLIconConverter>
+        <customconverter:DllIconConverter x:Key="RefreshIcon" FileName="%WINDIR%\system32\imageres.dll" Number="228"></customconverter:DllIconConverter>
         <DataTemplate x:Key="AppEntry">
             <Grid VerticalAlignment="Top">
                 <Grid.ColumnDefinitions>

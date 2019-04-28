@@ -8,45 +8,58 @@ namespace VolumeControl.States
 {
     public class AppStatus
     {
-        public Dictionary<string, float> processPathToVolume = new Dictionary<string, float>(2);
+        private Dictionary<string, float> processPathToVolume = new Dictionary<string, float>(2);
+        public Dictionary<string, float> ProcessPathToVolume
+        {
+            get { return processPathToVolume; }
+        }
+
+        public AppStatus(Dictionary<string, float> pathToVolume)
+        {
+            processPathToVolume = pathToVolume;
+        }
     }
 
     public class AppReflection
     {
-        public Dictionary<AudioSession, BitmapSource> sessionToThumbnail
+        private Dictionary<AudioSession, BitmapSource> sessionToThumbnail = new Dictionary<AudioSession, BitmapSource>(2);
+        public Dictionary<AudioSession, BitmapSource> SessionToThumbnail
         {
             get
             {
-                return _sessionToThumbnail;
+                return sessionToThumbnail;
             }
         }
 
-        public Dictionary<AudioSession, BitmapSource> _sessionToThumbnail = new Dictionary<AudioSession, BitmapSource>(2);
-
-        private int _fadeInMS = 250;
-        public int FadeInMS { get => _fadeInMS; set => _fadeInMS = value; }
+        private int fadeInMS = 250;
+        public int FadeInMS { get => fadeInMS; set => fadeInMS = value; }
 
         public AppStatus ToState()
         {
             Dictionary<string, float> appDefinitions = new Dictionary<string, float>();
-            foreach (var session in sessionToThumbnail.Keys)
+            foreach (var session in SessionToThumbnail.Keys)
             {
                 appDefinitions[session.ProcessPath] = session.Volume;
             }
 
-            return new AppStatus { processPathToVolume = appDefinitions };
+            return new AppStatus(appDefinitions);
         }
 
-        private double Lerp(double a, double b, double t)
+        private static double Lerp(double a, double b, double t)
         {
             return a * (1 - t) + b * t;
         }
 
         public void ApplyState(AppStatus state)
         {
-            foreach (var definition in state.processPathToVolume)
+            if (state == null || state.ProcessPathToVolume == null)
             {
-                foreach (var session in sessionToThumbnail.Keys)
+                throw new InvalidCastException("state cannot be applied - invariant supplied");
+            }
+
+            foreach (var definition in state.ProcessPathToVolume)
+            {
+                foreach (var session in SessionToThumbnail.Keys)
                 {
                     if (session.ProcessPath == definition.Key)
                     {
