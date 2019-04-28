@@ -132,5 +132,39 @@ namespace volumeStates
         }
         #endregion
 
+        #region FFXIV connection
+        bool isInCutscene = false;
+        public bool IsInCutsceneFlag
+        {
+            get { return isInCutscene; }
+            set { isInCutscene = value; }
+        }
+        FFXIVCutsceneFlagWatcher cutsceneWatcher;
+        private void ConnectToFFXIV(object sender, RoutedEventArgs e)
+        {
+            ConnectToFFXIVWindow connectConfirmation = new ConnectToFFXIVWindow();
+            if (connectConfirmation.ShowDialog() == false)
+            {
+                return;
+            }
+
+            cutsceneWatcher = new FFXIVCutsceneFlagWatcher();
+            Debug.Assert(cutsceneWatcher.CanWatch(), "Cutscene watcher couldn't establish connection to FFXIV");
+            IsConnectedToGame.IsChecked = true;
+            cutsceneWatcher.StartWatcher((bool isWatchingCutscene) =>
+            {
+                IsInCutsceneFlag = isWatchingCutscene;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsInCutsceneFlag"));
+            });
+
+        }
+        private void SetCutsceneHotkey(object sender, RoutedEventArgs e)
+        {
+        }
+        private void SetGameplayHotkey(object sender, RoutedEventArgs e)
+        {
+        }
+        #endregion
+
     }
 }

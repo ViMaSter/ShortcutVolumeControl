@@ -29,26 +29,40 @@
         </DataTemplate>
     </Window.Resources>
     <Grid>
-        <ComboBox SelectedValuePath="Id" DisplayMemberPath="FriendlyName" Name="AudioDeviceDropdown" Margin="10,36,10,0" VerticalAlignment="Top" SelectionChanged="OnAudioDeviceDropdownChanged"/>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="266*"/>
+            <RowDefinition Height="157*"/>
+        </Grid.RowDefinitions>
+        <ComboBox SelectedValuePath="Id" DisplayMemberPath="FriendlyName" Name="AudioDeviceDropdown" Margin="10,36,10.5,0" VerticalAlignment="Top" SelectionChanged="OnAudioDeviceDropdownChanged"/>
         <Label Content="Audio device:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
-        <ScrollViewer Margin="10,63,10.5,180.5">
-            <ListView Name="AppList" ItemTemplate="{StaticResource AppEntry}" ItemsSource="{Binding DataContext.CurrentAudioReflection.sessionToThumbnail, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MainWindow}}}" HorizontalContentAlignment="Stretch"/>
+        <ScrollViewer Margin="10,63,10.5,24">
+            <ListView Name="AppList" ItemTemplate="{StaticResource AppEntry}" ItemsSource="{Binding DataContext.CurrentAudioReflection.SessionToThumbnail, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MainWindow}}}" HorizontalContentAlignment="Stretch"/>
         </ScrollViewer>
-        <Label Content="Fade speed (ms):" Margin="10,0,0,144" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="104"/>
-        <TextBox Name="FadeSpeedInMS" Height="23" Margin="114,0,10,143" TextWrapping="NoWrap" Text="250" VerticalAlignment="Bottom" PreviewKeyUp="OnPreviewFadeSpeedInput"/>
+        <Label Content="Fade speed (ms):" Margin="10,0,0,144.5" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="104" Grid.RowSpan="2"/>
+        <TextBox Name="FadeSpeedInMS" Height="24" Margin="114,0,9.5,142.5" TextWrapping="NoWrap" Text="250" VerticalAlignment="Bottom" PreviewKeyUp="OnPreviewFadeSpeedInput" Grid.RowSpan="2"/>
 
-        <Button Tag="VOICE" Height="127" Margin="10,0,10,10" VerticalAlignment="Bottom" Click="OnSetStateClick">
+        <Button Height="23" Margin="10,0,10.5,113.5" VerticalAlignment="Bottom" Click="OnSetStateClick" Grid.Row="1">
             <Button.Content>
                 <TextBlock Text="Set state"></TextBlock>
             </Button.Content>
         </Button>
 
-        <Button HorizontalAlignment="Right" Margin="0,13,10,0" VerticalAlignment="Top" Height="21" Width="21" Click="RefreshList" >
+        <Button HorizontalAlignment="Right" Margin="0,13,10.5,0" VerticalAlignment="Top" Height="21" Width="20" Click="RefreshList" >
             <Button.Content>
                 <Image Source="{Binding Path=DataContext, Converter={StaticResource RefreshIcon} }" Height="14" Width="14" />
-                <!--<Image Source="/volumeStates;component/Resources/Refresh.ico" Height="19" Width="19" />-->
             </Button.Content>
         </Button>
+        <Button Height="21" Margin="11,0,9.5,73.5" VerticalAlignment="Bottom" Click="ConnectToFFXIV" Grid.Row="1">
+            <TextBlock Text="Connect to FFXIV..."/>
+        </Button>
+        <CheckBox Name="IsConnectedToGame" Content="Connected to game" Margin="10,0,0.5,53.5" VerticalAlignment="Bottom" IsEnabled="false" Grid.Row="1" />
+        <CheckBox Name="IsInCutscene" IsChecked="{Binding Path=DataContext.IsInCutsceneFlag}" Content="Is in cutscene" Margin="10,0,0.5,38.5" VerticalAlignment="Bottom" IsEnabled="false" Grid.Row="1" />
+        <!--<Button Height="21" Margin="10,0,210.5,12.5" VerticalAlignment="Bottom" Click="SetCutsceneHotkey" Grid.Row="1">
+            <TextBlock Text="Set cutscene hotkey"/>
+        </Button>
+        <Button Height="21" Margin="210,0,10.5,12.5" VerticalAlignment="Bottom" Click="SetGameplayHotkey" Grid.Row="1">
+            <TextBlock Text="Set gameplay hotkey"/>
+        </Button>-->
 
     </Grid>
 </Window>
