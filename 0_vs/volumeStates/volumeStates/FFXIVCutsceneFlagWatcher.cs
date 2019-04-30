@@ -108,8 +108,10 @@ namespace volumeStates
             return -1;
         }
 
-        private List<MEMORY_BASIC_INFORMATION> FetchMemoryPages(Process process)
+        private List<MEMORY_BASIC_INFORMATION> FetchMemoryPages(Process process, IProgress<StatusUpdate> currentStatus)
         {
+            currentStatus.Report(new StatusUpdate { CurrentProcess = StatusUpdate.ProcessType.ReadingMemory, ProcessPercentage = 0f });
+
             List<MEMORY_BASIC_INFORMATION> areas = new List<MEMORY_BASIC_INFORMATION>();
 
             SYSTEM_INFO sys_info = new SYSTEM_INFO();
@@ -124,10 +126,10 @@ namespace volumeStates
             // this will store any information we get from VirtualQueryEx()
             MEMORY_BASIC_INFORMATION mem_basic_info = new MEMORY_BASIC_INFORMATION();
 
-            int bytesRead = 0;  // number of bytes read with ReadProcessMemory
-
+            long startAt = proc_min_address_l;
             while (proc_min_address_l < proc_max_address_l)
             {
+                currentStatus.Report(new StatusUpdate { CurrentProcess = StatusUpdate.ProcessType.ReadingMemory, ProcessPercentage = 1 - (proc_max_address_l - proc_min_address_l) / (float)(proc_max_address_l - startAt) });
                 // 28 = sizeof(MEMORY_BASIC_INFORMATION)
                 int result = VirtualQueryEx(processHandle, proc_min_address, out mem_basic_info, 48);
                 if (result == 0)
@@ -153,13 +155,19 @@ namespace volumeStates
                 proc_min_address = new IntPtr(proc_min_address_l);
             }
 
+            currentStatus.Report(new StatusUpdate { CurrentProcess = StatusUpdate.ProcessType.ReadingMemory, ProcessPercentage = 1.0f });
+
             return areas;
         }
 
-        private bool FindNeedleInMemory(List<MEMORY_BASIC_INFORMATION> areas, int alignmentHint, byte[] needle, out long relativeByteOffset, out MEMORY_BASIC_INFORMATION memoryPage)
+        private bool FindNeedleInMemory(List<MEMORY_BASIC_INFORMATION> areas, int alignmentHint, byte[] needle, out long relativeByteOffset, out MEMORY_BASIC_INFORMATION memoryPage, IProgress<StatusUpdate> currentStatus)
         {
-            foreach (var area in areas)
+            currentStatus.Report(new StatusUpdate { CurrentProcess = StatusUpdate.ProcessType.ParsingMemory, ProcessPercentage = 0.0f });
+
+            for (int i = 0; i < areas.Count; i++)
             {
+                currentStatus.Report(new StatusUpdate { CurrentProcess = StatusUpdate.ProcessType.ParsingMemory, ProcessPercentage = i / (float)areas.Count });
+                var area = areas[i];
                 byte[] buffer = new byte[area.RegionSize.ToInt64()];
                 int bytesRead = 0;
                 if (ReadProcessMemory(processHandle, area.BaseAddress, buffer, area.RegionSize, ref bytesRead) == false)
@@ -167,16 +175,24 @@ namespace volumeStates
                     int errorCode = Marshal.GetLastWin32Error();
                     if (errorCode == 299)
                     {
-                        // intentionally void
+                        Trace.WriteLine("Couldn't read entire memory; retrying...");
+                        if (ReadProcessMemory(processHandle, area.BaseAddress, buffer, area.RegionSize, ref bytesRead) == false)
+                        {
+                            int errorCodeSecondTry = Marshal.GetLastWin32Error();
+                            if (errorCodeSecondTry == 299)
+                            {
+                                Trace.WriteLine("Couldn't read entire memory again... Continuing...");
+                            }
+                            else
+                            {
+                                throw new Win32Exception(errorCode, "Unhandled win32 API error calling ReadProcessMemory");
+                            }
+                        }
                     }
                     else
                     {
                         throw new Win32Exception(errorCode, "Unhandled win32 API error calling ReadProcessMemory");
                     }
-                }
-                if (bytesRead != area.RegionSize.ToInt64())
-                {
-                    throw new Exception("Couldn't read entire memory");
                 }
 
                 long startOffset = 0;
@@ -189,6 +205,7 @@ namespace volumeStates
                         {
                             relativeByteOffset = startOffset;
                             memoryPage = area;
+                            currentStatus.Report(new StatusUpdate { CurrentProcess = StatusUpdate.ProcessType.Done, ProcessPercentage = 1.0f, ReadyToWatch = true });
                             return true;
                         }
                         ++startOffset;
@@ -197,6 +214,8 @@ namespace volumeStates
             }
             relativeByteOffset = -1;
             memoryPage = new MEMORY_BASIC_INFORMATION();
+
+            currentStatus.Report(new StatusUpdate { CurrentProcess = StatusUpdate.ProcessType.Done, ProcessPercentage = 1.0f });
             return false;
         }
 
@@ -204,17 +223,33 @@ namespace volumeStates
         long relativeByteOffset = -1;
         MEMORY_BASIC_INFORMATION memoryPage = new MEMORY_BASIC_INFORMATION();
 
-        public FFXIVCutsceneFlagWatcher()
+        public class StatusUpdate
         {
+            public enum ProcessType
+            {
+                ConnectingToProcess = 0,
+                ReadingMemory,
+                ParsingMemory,
+                Done,
+                COUNT
+            };
+
+            public float ProcessPercentage { get; set; }
+            public ProcessType CurrentProcess { get; set; }
+            public bool ReadyToWatch { get; set; } = false;
+        }
+
+        IProgress<StatusUpdate> currentStatus;
+        public FFXIVCutsceneFlagWatcher(IProgress<StatusUpdate> connectionStatus)
+        {
+            currentStatus = connectionStatus;
+            currentStatus.Report(new StatusUpdate { CurrentProcess = StatusUpdate.ProcessType.ConnectingToProcess, ProcessPercentage = 0.0f });
+
             Process process = Process.GetProcessesByName("ffxiv_dx11")[0];
             processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_WM_READ, false, process.Id);
 
             // getting minimum & maximum address
-            List<MEMORY_BASIC_INFORMATION> areas = FetchMemoryPages(process);
-
-            FindNeedleInMemory(areas, 8, new byte[] { 0x00, 0x00, 0x00, 0x00, 0xCC, 0xCC, 0xCC, 0x3D, 0x00 }, out relativeByteOffset, out memoryPage);
-
-            Console.ReadLine();
+            FindNeedleInMemory(FetchMemoryPages(process, currentStatus), 8, new byte[] { 0x00, 0x00, 0x00, 0x00, 0xCC, 0xCC, 0xCC, 0x3D, 0x00 }, out relativeByteOffset, out memoryPage, currentStatus);
         }
 
         public bool CanWatch()

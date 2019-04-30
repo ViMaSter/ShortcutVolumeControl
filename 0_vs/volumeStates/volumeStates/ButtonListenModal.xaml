@@ -5,10 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:volumeStates"
         mc:Ignorable="d"
-        Title="Input listener" Height="106.546" Width="239.067" KeyUp="OnKeyUp">
+        Title="Input listener" Height="95" Width="250" ResizeMode="NoResize" WindowStartupLocation="CenterOwner" KeyUp="OnKeyUp">
     <Grid>
-        <Label Content="Waiting for button press..." HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
-        <Button Content="Close" HorizontalAlignment="Left" Margin="14,41,0,0" VerticalAlignment="Top" Width="210" Click="OnClick"/>
-
+        <Label Content="Waiting for button press..." Margin="10,10,10,0" Padding="0" VerticalAlignment="Top"/>
+        <Button Content="Close" Margin="10,0,10,10" VerticalAlignment="Bottom" Click="OnClick"/>
     </Grid>
 </Window>

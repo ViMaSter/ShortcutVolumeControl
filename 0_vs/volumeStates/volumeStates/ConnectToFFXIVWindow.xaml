@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:volumeStates"
         mc:Ignorable="d"
-        Title="Connecting to FFXIV (beta)" Height="200" Width="250">
+        Title="Connecting to FFXIV (beta)" Height="200" Width="250" ResizeMode="NoResize" WindowStartupLocation="CenterOwner">
     <Grid Margin="10">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="10*" />
@@ -17,16 +17,15 @@
             <RowDefinition Height="3*" />
         </Grid.RowDefinitions>
         <TextBlock Grid.Column="0" Grid.ColumnSpan="3" TextWrapping="Wrap">
-        Enabling this feature, will monitor the memory of the Final Fantasy XIV-process.
-        <LineBreak />
-        This might take up to 20 seconds.
-        <LineBreak />
-        <LineBreak />
-        Are you sure you want to continue?
+            Enabling this feature, will monitor the memory of the Final Fantasy XIV-process.
+            <LineBreak />
+            This might take up to 20 seconds.
+            <LineBreak />
+            <LineBreak />
+            Are you sure you want to continue?
         </TextBlock>
 
         <Button Content="Yes" Grid.Column="0" Grid.Row="1" Click="OnYesClick"/>
         <Button Content="No" Grid.Column="2" Grid.Row="1" Click="OnNoClick"/>
-
     </Grid>
 </Window>

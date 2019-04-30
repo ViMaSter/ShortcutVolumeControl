@@ -17,14 +17,14 @@ namespace VolumeControl.AudioWrapper
             private class WindowsHotkey
             {
                 #region windows API helper
-                [DllImport("User32.dll")]
+                [DllImport("User32.dll", SetLastError = true)]
                 private static extern uint RegisterHotKey(
                 [In] IntPtr hWnd,
                 [In] int id,
                 [In] uint fsModifiers,
                 [In] uint vk);
 
-                [DllImport("User32.dll")]
+                [DllImport("User32.dll", SetLastError = true)]
                 private static extern uint UnregisterHotKey(
                     [In] IntPtr hWnd,
                     [In] int id);
@@ -61,9 +61,10 @@ namespace VolumeControl.AudioWrapper
                 {
                     var helper = new WindowInteropHelper(Application.Current.MainWindow);
                     uint winAPIResult = RegisterHotKey(helper.Handle, hotkeyID, modifier, key);
-                    if (winAPIResult != 0)
+                    if (winAPIResult == 0)
                     {
-                        throw new SystemException("Couldn't register hotkey - error code: " + winAPIResult);
+                        int winAPIErrorCode = Marshal.GetLastWin32Error();
+                        throw new SystemException("Couldn't register hotkey - error code: " + winAPIErrorCode);
                     }
                 }
 
@@ -71,9 +72,10 @@ namespace VolumeControl.AudioWrapper
                 {
                     var helper = new WindowInteropHelper(Application.Current.MainWindow);
                     uint winAPIResult = UnregisterHotKey(helper.Handle, hotkeyID);
-                    if (winAPIResult != 0)
+                    if (winAPIResult == 0)
                     {
-                        throw new SystemException("Couldn't unregister hotkey - error code: " + winAPIResult);
+                        int winAPIErrorCode = Marshal.GetLastWin32Error();
+                        throw new SystemException("Couldn't unregister hotkey - error code: " + winAPIErrorCode);
                     }
                 }
                 #endregion
@@ -147,6 +149,17 @@ namespace VolumeControl.AudioWrapper
             (
                 modifier, key, appStatus, () => GetReflection().ApplyState(hotkeysByState[mapping].AppStatusReference)
             );
+        }
+
+        public bool AttemptPress(Tuple<ModifierKeys, Key> keyCombo)
+        {
+            if (hotkeysByState.ContainsKey(keyCombo))
+            {
+                GetReflection().ApplyState(hotkeysByState[keyCombo].AppStatusReference);
+                return true;
+            }
+
+            return false;
         }
 
         public void EnableAllHotkeys()
