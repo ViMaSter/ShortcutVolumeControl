@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
-using volumeStates;
+using VolumeStates;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 

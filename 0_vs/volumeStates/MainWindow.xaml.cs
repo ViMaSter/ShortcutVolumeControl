@@ -13,7 +13,7 @@ using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Configuration;
 
-namespace volumeStates
+namespace VolumeStates
 {
     public partial class MainWindow : Window, INotifyPropertyChanged
     {

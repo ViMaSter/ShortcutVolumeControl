@@ -12,7 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
-namespace volumeStates
+namespace VolumeStates
 {
     /// <summary>
     /// Interaction logic for ButtonListenModal.xaml
