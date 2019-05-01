@@ -119,15 +119,15 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Page Include="ButtonListenModal.xaml">
+    <Page Include="Windows\ButtonListenModal.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ConnectToFFXIVWindow.xaml">
+    <Page Include="Windows\ConnectToFFXIVWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="MainWindow.xaml">
+    <Page Include="Windows\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -135,24 +135,24 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="AudioStates.cs" />
-    <Compile Include="AudioUtilities.cs" />
-    <Compile Include="ButtonListenModal.xaml.cs">
+    <Compile Include="Data\AudioStates.cs" />
+    <Compile Include="Data\AudioUtilities.cs" />
+    <Compile Include="Windows\ButtonListenModal.xaml.cs">
       <DependentUpon>ButtonListenModal.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ConnectToFFXIVWindow.xaml.cs">
+    <Compile Include="Windows\ConnectToFFXIVWindow.xaml.cs">
       <DependentUpon>ConnectToFFXIVWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ContentConverter.cs" />
-    <Compile Include="Hotkey.cs" />
-    <Compile Include="IconUtilities.cs" />
-    <Compile Include="MainWindow.xaml.cs">
+    <Compile Include="Windows\ContentConverter.cs" />
+    <Compile Include="Data\Hotkey.cs" />
+    <Compile Include="Data\IconUtilities.cs" />
+    <Compile Include="Windows\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FFXIVCutsceneFlagWatcher.cs" />
+    <Compile Include="Data\FFXIVCutsceneFlagWatcher.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
