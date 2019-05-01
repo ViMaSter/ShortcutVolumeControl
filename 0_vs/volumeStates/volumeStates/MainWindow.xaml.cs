@@ -8,6 +8,10 @@ using System.Windows.Media.Imaging;
 using System.Diagnostics;
 using System;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
+using System.Collections.Generic;
+using System.Configuration;
 
 namespace volumeStates
 {
@@ -116,6 +120,8 @@ namespace volumeStates
             }
 
             CurrentAudioReflection.FadeInMS = newValue;
+
+            UpdateUserSettings();
         }
 
         private void OnSetStateClick(object sender, RoutedEventArgs e)
@@ -132,6 +138,8 @@ namespace volumeStates
                 );
             }
             hotkeys.EnableAllHotkeys();
+
+            UpdateUserSettings();
         }
         #endregion
 
@@ -188,7 +196,7 @@ namespace volumeStates
             get => statusBarText;
             set
             {
-                statusBarText = value;
+                statusBarText = DateTime.Now.ToString("[yyyy-MM-dd HH:mm:ss] ") + value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("StatusBarText"));
             }
         }
@@ -303,6 +311,7 @@ namespace volumeStates
             {
                 state = null;
             }
+            UpdateUserSettings();
             hotkeys.EnableAllHotkeys();
         }
 
@@ -314,6 +323,106 @@ namespace volumeStates
         {
             SetHotkey(ref GameplayState);
         }
+
+        #region Serialization
+        public JObject SerializeFFXIVSettings()
+        {
+            JObject FFXIVSettings = new JObject();
+
+            JObject cutsceneHotkey = new JObject();
+            cutsceneHotkey.Add("modifier", (int)CutsceneState.Item1);
+            cutsceneHotkey.Add("key", (int)CutsceneState.Item2);
+
+            JObject gameplayHotkey = new JObject();
+            gameplayHotkey.Add("modifier", (int)GameplayState.Item1);
+            gameplayHotkey.Add("key", (int)GameplayState.Item2);
+
+            FFXIVSettings.Add("cutsceneHotkey", cutsceneHotkey);
+            FFXIVSettings.Add("gameplayHotkey", gameplayHotkey);
+
+            return FFXIVSettings;
+        }
+
+        public bool DeserializeFFXIVSettings(dynamic FFXIVSettingsBlob)
+        {
+            if (FFXIVSettingsBlob == null)
+            {
+                return false;
+            }
+            GameplayState = new Tuple<ModifierKeys, Key>((ModifierKeys)FFXIVSettingsBlob.gameplayHotkey.modifier, (Key)FFXIVSettingsBlob.gameplayHotkey.key);
+            CutsceneState = new Tuple<ModifierKeys, Key>((ModifierKeys)FFXIVSettingsBlob.cutsceneHotkey.modifier, (Key)FFXIVSettingsBlob.cutsceneHotkey.key);
+
+            return true;
+        }
         #endregion
+        #endregion
+
+        #region Serialization
+        private const uint JSONVersion = 0;
+        public JObject SerializeGeneralSettings()
+        {
+            JObject root = new JObject();
+            root.Add("version", JSONVersion);
+            root.Add("fadeInMS", CurrentAudioReflection.FadeInMS);
+            root.Add("states", hotkeys.Serialize());
+            root.Add("FFXIV", SerializeFFXIVSettings());
+            return root;
+        }
+        public bool Deserialize(string jsonBlob)
+        {
+            dynamic deserializedJson = JsonConvert.DeserializeObject(jsonBlob);
+
+            if (deserializedJson.version != JSONVersion)
+            {
+                return false;
+            }
+
+            DeserializeFFXIVSettings(deserializedJson.FFXIV);
+
+            CurrentAudioReflection.FadeInMS = deserializedJson.fadeInMS;
+            FadeSpeedInMS.Text = CurrentAudioReflection.FadeInMS.ToString();
+
+            hotkeys.ClearMappings();
+            foreach (var entry in deserializedJson.states)
+            {
+                Dictionary<string, float> appDefinitions = new Dictionary<string, float>();
+                foreach (var app in entry.apps)
+                {
+                    appDefinitions.Add((string)app.process, (float)app.volume);
+                }
+
+                hotkeys.SetKeyPerState(
+                    (ModifierKeys)entry.hotkey.modifier,
+                    (Key)entry.hotkey.key,
+                    new AppStatus(appDefinitions)
+                );
+            }
+            hotkeys.EnableAllHotkeys();
+
+            return true;
+        }
+        #endregion
+
+        public void RestoreFromUserSettings()
+        {
+            if (Properties.Settings.Default["stateJSON"].ToString().Length > 0)
+            {
+                StatusBarText = "Restoring user settings...";
+                Deserialize(Properties.Settings.Default["stateJSON"].ToString());
+                StatusBarText = "Successfully restored user settings...";
+            }
+        }
+
+        public void UpdateUserSettings()
+        {
+            Properties.Settings.Default["stateJSON"] = SerializeGeneralSettings().ToString(Formatting.None);
+            Properties.Settings.Default.Save();
+            StatusBarText = "Updated user settings...";
+        }
+
+        private void OnMainWindowLoaded(object sender, RoutedEventArgs e)
+        {
+            RestoreFromUserSettings();
+        }
     }
 }

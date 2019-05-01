@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:volumeStates"
         xmlns:customconverter="clr-namespace:VolumeControl.Converter"
         mc:Ignorable="d"
-        Title="Volume state keyboard mapping" Height="524" Width="403.273">
+        Title="Volume state keyboard mapping" Height="524" Width="403.273" Loaded="OnMainWindowLoaded">
     <Window.Resources>
         <customconverter:VolumePercentageConverter x:Key="VolumePercentageConverter"></customconverter:VolumePercentageConverter>
         <customconverter:DllIconConverter x:Key="RefreshIcon" FileName="%WINDIR%\system32\imageres.dll" Number="228"></customconverter:DllIconConverter>
@@ -70,6 +70,5 @@
             </StatusBar>
         </DockPanel>
         <Separator Height="5" Margin="10,0,10,97.5" Grid.Row="1" VerticalAlignment="Bottom" />
-
     </Grid>
 </Window>

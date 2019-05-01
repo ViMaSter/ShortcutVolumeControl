@@ -7,6 +7,8 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
 using volumeStates;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace VolumeControl.AudioWrapper
 {
@@ -110,6 +112,7 @@ namespace VolumeControl.AudioWrapper
             }
 
             WindowsHotkey windowsHotkey;
+
             public AppStatus AppStatusReference
             {
                 get => appStatusReference;
@@ -151,6 +154,22 @@ namespace VolumeControl.AudioWrapper
             );
         }
 
+        public void RemoveMapping(ModifierKeys modifier, Key key)
+        {
+            Tuple<ModifierKeys, Key> mapping = new Tuple<ModifierKeys, Key>(modifier, key);
+
+            if (hotkeysByState.ContainsKey(mapping))
+            {
+                hotkeysByState.Remove(mapping);
+            }
+        }
+
+        public void ClearMappings()
+        {
+            DisableAllHotkeys();
+            hotkeysByState.Clear();
+        }
+
         public bool AttemptPress(Tuple<ModifierKeys, Key> keyCombo)
         {
             if (hotkeysByState.ContainsKey(keyCombo))
@@ -176,6 +195,33 @@ namespace VolumeControl.AudioWrapper
             {
                 mapping.Value.Deactivate();
             }
+        }
+
+        public JArray Serialize()
+        {
+            JArray stateArray = new JArray();
+            foreach(var entry in hotkeysByState)
+            {
+                JObject entryObject = new JObject();
+
+                JObject hotkeyObject = new JObject();
+                hotkeyObject.Add("modifier", (int)entry.Key.Item1);
+                hotkeyObject.Add("key", (int)entry.Key.Item2);
+
+                JArray appsObject = new JArray();
+                foreach (var pathToVolume in entry.Value.AppStatusReference.ProcessPathToVolume)
+                {
+                    JObject app = new JObject();
+                    app.Add("process", pathToVolume.Key);
+                    app.Add("volume", pathToVolume.Value);
+                    appsObject.Add(app);
+                }
+
+                entryObject.Add("hotkey", hotkeyObject);
+                entryObject.Add("apps", appsObject);
+                stateArray.Add(entryObject);
+            }
+            return stateArray;
         }
     }
 }
