@@ -141,6 +141,23 @@ namespace volumeStates
 
             UpdateUserSettings();
         }
+
+        private void OnClearStateClick(object sender, RoutedEventArgs e)
+        {
+            hotkeys.DisableAllHotkeys();
+            ButtonListenModal buttonListenModal = new ButtonListenModal();
+            buttonListenModal.Owner = this;
+            if (buttonListenModal.ShowDialog() == true)
+            {
+                hotkeys.RemoveMapping(
+                    buttonListenModal.Modifiers,
+                    buttonListenModal.PressedKey
+                );
+            }
+            hotkeys.EnableAllHotkeys();
+
+            UpdateUserSettings();
+        }
         #endregion
 
         #region FFXIV connection
@@ -247,7 +264,7 @@ namespace volumeStates
                             }
                             else
                             {
-                                StatusBarText = "Cutscene started, triggering associated state...";
+                                StatusBarText = "Cutscene started, triggered associated state";
                             }
                         }
                     }
@@ -261,7 +278,7 @@ namespace volumeStates
                             }
                             else
                             {
-                                StatusBarText = "Cutscene ended, triggering associated state...";
+                                StatusBarText = "Cutscene ended, triggered associated state";
                             }
                         }
                     }
@@ -422,7 +439,7 @@ namespace volumeStates
             {
                 StatusBarText = "Restoring user settings...";
                 Deserialize(Properties.Settings.Default["stateJSON"].ToString());
-                StatusBarText = "Successfully restored user settings...";
+                StatusBarText = "Successfully restored user settings";
             }
         }
 
@@ -430,7 +447,8 @@ namespace volumeStates
         {
             Properties.Settings.Default["stateJSON"] = SerializeGeneralSettings().ToString(Formatting.None);
             Properties.Settings.Default.Save();
-            StatusBarText = "Updated user settings...";
+            Debug.WriteLine("New config: " + SerializeGeneralSettings().ToString(Formatting.None));
+            StatusBarText = "Updated user settings";
         }
 
         private void OnMainWindowLoaded(object sender, RoutedEventArgs e)
