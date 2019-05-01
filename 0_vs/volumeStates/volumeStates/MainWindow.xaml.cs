@@ -329,16 +329,21 @@ namespace volumeStates
         {
             JObject FFXIVSettings = new JObject();
 
-            JObject cutsceneHotkey = new JObject();
-            cutsceneHotkey.Add("modifier", (int)CutsceneState.Item1);
-            cutsceneHotkey.Add("key", (int)CutsceneState.Item2);
+            if (CutsceneState != null)
+            {
+                JObject cutsceneHotkey = new JObject();
+                cutsceneHotkey.Add("modifier", (int)CutsceneState.Item1);
+                cutsceneHotkey.Add("key", (int)CutsceneState.Item2);
+                FFXIVSettings.Add("cutsceneHotkey", cutsceneHotkey);
+            }
 
-            JObject gameplayHotkey = new JObject();
-            gameplayHotkey.Add("modifier", (int)GameplayState.Item1);
-            gameplayHotkey.Add("key", (int)GameplayState.Item2);
-
-            FFXIVSettings.Add("cutsceneHotkey", cutsceneHotkey);
-            FFXIVSettings.Add("gameplayHotkey", gameplayHotkey);
+            if (GameplayState != null)
+            {
+                JObject gameplayHotkey = new JObject();
+                gameplayHotkey.Add("modifier", (int)GameplayState.Item1);
+                gameplayHotkey.Add("key", (int)GameplayState.Item2);
+                FFXIVSettings.Add("gameplayHotkey", gameplayHotkey);
+            }
 
             return FFXIVSettings;
         }
@@ -349,8 +354,16 @@ namespace volumeStates
             {
                 return false;
             }
-            GameplayState = new Tuple<ModifierKeys, Key>((ModifierKeys)FFXIVSettingsBlob.gameplayHotkey.modifier, (Key)FFXIVSettingsBlob.gameplayHotkey.key);
-            CutsceneState = new Tuple<ModifierKeys, Key>((ModifierKeys)FFXIVSettingsBlob.cutsceneHotkey.modifier, (Key)FFXIVSettingsBlob.cutsceneHotkey.key);
+
+            if (FFXIVSettingsBlob.gameplayHotkey != null)
+            {
+                GameplayState = new Tuple<ModifierKeys, Key>((ModifierKeys)FFXIVSettingsBlob.gameplayHotkey.modifier, (Key)FFXIVSettingsBlob.gameplayHotkey.key);
+            }
+
+            if (FFXIVSettingsBlob.cutsceneHotkey != null)
+            {
+                CutsceneState = new Tuple<ModifierKeys, Key>((ModifierKeys)FFXIVSettingsBlob.cutsceneHotkey.modifier, (Key)FFXIVSettingsBlob.cutsceneHotkey.key);
+            }
 
             return true;
         }
