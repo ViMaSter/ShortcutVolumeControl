@@ -9,8 +9,12 @@ using System.Windows.Media.Imaging;
 
 internal static class IconUtilities
 {
-    [DllImport("gdi32.dll", SetLastError = true)]
-    private static extern bool DeleteObject(IntPtr hObject);
+    static class NativeMethods
+    {
+        [DllImport("gdi32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool DeleteObject(IntPtr hObject);
+    }
 
     public static ImageSource ToImageSource(this Icon icon)
     {
@@ -23,7 +27,7 @@ internal static class IconUtilities
             Int32Rect.Empty,
             BitmapSizeOptions.FromEmptyOptions());
 
-        if (!DeleteObject(hBitmap))
+        if (!NativeMethods.DeleteObject(hBitmap))
         {
             throw new Win32Exception();
         }

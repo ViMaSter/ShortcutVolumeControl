@@ -20,7 +20,7 @@ namespace VolumeStates
         #region members
         public event PropertyChangedEventHandler PropertyChanged;
 
-        AudioDevice CurrentAudioDevice = AudioUtilities.GetDefaultDevice();
+        AudioDevice CurrentAudioDevice = AudioSession.RequestDefaultDevice();
         AppReflection _currentAudioReflection = new AppReflection();
         public AppReflection CurrentAudioReflection
         {
@@ -51,15 +51,15 @@ namespace VolumeStates
         {
             AudioDeviceDropdown.Items.Clear();
 
-            foreach (var device in AudioUtilities.GetAllDevices())
+            foreach (var device in AudioSession.RequestAllDevices())
             {
-                if (device.State == AudioDeviceState.Active)
+                if (device.State.HasFlag(AudioDeviceStates.Active))
                 {
                     AudioDeviceDropdown.Items.Add(device);
                 }
             }
 
-            CurrentAudioDevice = AudioUtilities.GetDefaultDevice();
+            CurrentAudioDevice = AudioSession.RequestDefaultDevice();
 
             AudioDeviceDropdown.SelectedValue = CurrentAudioDevice.Id;
         }
@@ -68,12 +68,12 @@ namespace VolumeStates
         {
             AppReflection newReflection = new AppReflection();
             newReflection.FadeInMS = CurrentAudioReflection.FadeInMS;
-            foreach (AudioSession session in AudioUtilities.GetAllSessions(device))
+            foreach (AudioSession session in AudioSession.RequestAllSessions(device))
             {
                 if (session.Process != null)
                 {
                     BitmapSource source = null;
-                    if (session.Process.GetMainModuleFileName() != null)
+                    if (session.ProcessPath != null)
                     {
                         System.Drawing.Icon icon = System.Drawing.Icon.ExtractAssociatedIcon(session.ProcessPath);
                         source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHIcon(

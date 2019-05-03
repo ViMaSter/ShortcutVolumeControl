@@ -258,7 +258,6 @@ namespace VolumeStates
         }
 
         #region watcher
-        Task watchingTask = null;
         bool isInCutscene = false;
         CancellationTokenSource tokenSource = new CancellationTokenSource();
         CancellationToken token;
