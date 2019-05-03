@@ -1,17 +1,13 @@
-﻿using VolumeControl.States;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
-using VolumeStates;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.ComponentModel;
 
-namespace VolumeControl.AudioWrapper
+namespace VolumeStates.Data
 {
     public class HotkeyMappings
     {

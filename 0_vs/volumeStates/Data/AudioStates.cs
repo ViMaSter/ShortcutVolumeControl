@@ -1,10 +1,10 @@
-using VolumeControl.AudioWrapper;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
+using VolumeStates.AudioWrapper;
 
-namespace VolumeControl.States
+namespace VolumeStates.Data
 {
     public class AppStatus
     {

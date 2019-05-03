@@ -84,10 +84,10 @@
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
   </PropertyGroup>
   <PropertyGroup>
-    <SignManifests>true</SignManifests>
+    <SignManifests>false</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <SignAssembly>true</SignAssembly>
+    <SignAssembly>false</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>VolumeState_release.pfx</AssemblyOriginatorKeyFile>
@@ -137,7 +137,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Data\AudioStates.cs" />
-    <Compile Include="Data\AudioUtilities.cs" />
+    <Compile Include="AudioWrapper\AudioUtilities.cs" />
     <Compile Include="Windows\ButtonListenModal.xaml.cs">
       <DependentUpon>ButtonListenModal.xaml</DependentUpon>
     </Compile>

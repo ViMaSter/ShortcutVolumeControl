@@ -1,6 +1,4 @@
-﻿using VolumeControl.AudioWrapper;
-using VolumeControl.States;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -13,7 +11,8 @@ using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Globalization;
-
+using VolumeStates.AudioWrapper;
+using VolumeStates.Data;
 namespace VolumeStates
 {
     public partial class MainWindow : Window, INotifyPropertyChanged, IDisposable
@@ -21,7 +20,7 @@ namespace VolumeStates
         #region members
         public event PropertyChangedEventHandler PropertyChanged;
 
-        AudioDevice CurrentAudioDevice = AudioSession.RequestDefaultDevice();
+        AudioDevice CurrentAudioDevice = AudioSession.RequestDefaultSpeakers();
         AppReflection _currentAudioReflection = new AppReflection();
         public AppReflection CurrentAudioReflection
         {
@@ -60,7 +59,7 @@ namespace VolumeStates
                 }
             }
 
-            CurrentAudioDevice = AudioSession.RequestDefaultDevice();
+            CurrentAudioDevice = AudioSession.RequestDefaultSpeakers();
 
             AudioDeviceDropdown.SelectedValue = CurrentAudioDevice.Id;
         }
@@ -253,7 +252,6 @@ namespace VolumeStates
                 statusUpdate = new Progress<FFXIVCutsceneFlagWatcher.StatusUpdate>();
                 statusUpdate.ProgressChanged += OnFFXIVConnectionUpdate;
                 cutsceneWatcher = new FFXIVCutsceneFlagWatcher(statusUpdate);
-
                 cutsceneWatcher.StartWatcher((bool isWatchingCutscene) =>
                 {
                     if (isWatchingCutscene)
@@ -469,7 +467,7 @@ namespace VolumeStates
         {
             Dispose(true);
             GC.SuppressFinalize(this);
-        }
+   		}
 
         protected virtual void Dispose(bool disposing)
         {

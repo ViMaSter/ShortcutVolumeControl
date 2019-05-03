@@ -369,7 +369,7 @@ namespace VolumeStates
 
         public void Dispose()
         {
-            processHandle.Dispose();
+            processHandle?.Dispose();
             tokenSource.Dispose();
             GC.SuppressFinalize(this);
         }
