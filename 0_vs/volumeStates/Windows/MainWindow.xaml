@@ -66,7 +66,7 @@
             <TextBlock Text="{Binding Path=DataContext.FFXIVConnectionLabel}"/>
         </Button>
         <CheckBox IsChecked="{Binding Path=DataContext.IsConnectedToGame}" Content="Connected to game" Margin="10,0,0,49" VerticalAlignment="Bottom" IsEnabled="false" Grid.Row="1" />
-        <CheckBox IsChecked="{Binding Path=DataContext.IsInCutsceneFlag}" Content="Is in cutscene" Margin="10,0,0,33" VerticalAlignment="Bottom" IsEnabled="false" Grid.Row="1" />
+        <CheckBox IsChecked="{Binding Path=DataContext.IsInCutscene}" Content="Is in cutscene" Margin="10,0,0,33" VerticalAlignment="Bottom" IsEnabled="false" Grid.Row="1" />
         <Button Grid.Column="0" Height="23" Margin="10,0,0,7" VerticalAlignment="Bottom" Click="SetCutsceneHotkey" Grid.Row="1" Content="Set cutscene hotkey" />
         <Button Grid.Column="2" Height="23" Margin="0,0,10,7" VerticalAlignment="Bottom" Click="SetGameplayHotkey" Grid.Row="1" Content="Set gameplay hotkey" />
         <!-- FFXIV  END  -->

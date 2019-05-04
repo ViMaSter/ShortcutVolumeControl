@@ -9,27 +9,31 @@ using System.Windows.Interop;
 using VolumeStates;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.ComponentModel;
 
 namespace VolumeControl.AudioWrapper
 {
-    public class HotkeyCollection
+    public class HotkeyMappings
     {
-        public class AudioState
+        private class AudioState
         {
             private class WindowsHotkey
             {
                 #region windows API helper
-                [DllImport("User32.dll", SetLastError = true)]
-                private static extern uint RegisterHotKey(
-                [In] IntPtr hWnd,
-                [In] int id,
-                [In] uint fsModifiers,
-                [In] uint vk);
-
-                [DllImport("User32.dll", SetLastError = true)]
-                private static extern uint UnregisterHotKey(
+                private static class NativeMethods
+                {
+                    [DllImport("User32.dll", SetLastError = true)]
+                    public static extern uint RegisterHotKey(
                     [In] IntPtr hWnd,
-                    [In] int id);
+                    [In] int id,
+                    [In] uint fsModifiers,
+                    [In] uint vk);
+
+                    [DllImport("User32.dll", SetLastError = true)]
+                    public static extern uint UnregisterHotKey(
+                        [In] IntPtr hWnd,
+                        [In] int id);
+                }
 
                 private HwndSource _source;
                 private static int _HOTKEYINDEX = 9000;
@@ -62,22 +66,22 @@ namespace VolumeControl.AudioWrapper
                 private void RegisterHotKey(uint key, uint modifier)
                 {
                     var helper = new WindowInteropHelper(Application.Current.MainWindow);
-                    uint winAPIResult = RegisterHotKey(helper.Handle, hotkeyID, modifier, key);
+                    uint winAPIResult = NativeMethods.RegisterHotKey(helper.Handle, hotkeyID, modifier, key);
                     if (winAPIResult == 0)
                     {
                         int winAPIErrorCode = Marshal.GetLastWin32Error();
-                        throw new SystemException("Couldn't register hotkey - error code: " + winAPIErrorCode);
+                        throw new Win32Exception("Couldn't register hotkey - error code: " + winAPIErrorCode);
                     }
                 }
 
                 private void UnregisterHotKey()
                 {
                     var helper = new WindowInteropHelper(Application.Current.MainWindow);
-                    uint winAPIResult = UnregisterHotKey(helper.Handle, hotkeyID);
+                    uint winAPIResult = NativeMethods.UnregisterHotKey(helper.Handle, hotkeyID);
                     if (winAPIResult == 0)
                     {
                         int winAPIErrorCode = Marshal.GetLastWin32Error();
-                        throw new SystemException("Couldn't unregister hotkey - error code: " + winAPIErrorCode);
+                        throw new Win32Exception("Couldn't unregister hotkey - error code: " + winAPIErrorCode);
                     }
                 }
                 #endregion
@@ -139,7 +143,7 @@ namespace VolumeControl.AudioWrapper
         private Func<AppReflection> GetReflection;
         private Dictionary<Tuple<ModifierKeys, Key>, AudioState> hotkeysByState = new Dictionary<Tuple<ModifierKeys, Key>, AudioState>();
 
-        public HotkeyCollection(Func<AppReflection> getReflection)
+        public HotkeyMappings(Func<AppReflection> getReflection)
         {
             GetReflection = getReflection;
         }

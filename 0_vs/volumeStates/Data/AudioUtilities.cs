@@ -10,7 +10,7 @@ namespace VolumeControl.AudioWrapper
 {
     public sealed class AudioSession : IDisposable, INotifyPropertyChanged
     {
-        public static class Utilities
+        private static class Utilities
         {
             public static class NativeMethods
             {
@@ -106,6 +106,7 @@ namespace VolumeControl.AudioWrapper
                     VT_I4 = 3,
                     VT_BOOL = 11,
                     VT_UI4 = 19,
+                    VT_UI8 = 21,
                     VT_LPWSTR = 31,
                     VT_BLOB = 65,
                     VT_CLSID = 72,
@@ -124,17 +125,23 @@ namespace VolumeControl.AudioWrapper
                     {
                         switch (vt)
                         {
+                            case VARTYPE.VT_UI4:
+                                return union.ulVal;
+
                             case VARTYPE.VT_BOOL:
                                 return union.boolVal != 0;
 
                             case VARTYPE.VT_LPWSTR:
                                 return Marshal.PtrToStringUni(union.pwszVal);
 
-                            case VARTYPE.VT_UI4:
-                                return union.lVal;
+                            case VARTYPE.VT_UI8:
+                                return union.uhVal;
 
                             case VARTYPE.VT_CLSID:
                                 return (Guid)Marshal.PtrToStructure(union.puuid, typeof(Guid));
+
+                            case VARTYPE.VT_I4:
+                                return union.lVal;
 
                             default:
                                 return vt.ToString() + ":?";
@@ -142,11 +149,14 @@ namespace VolumeControl.AudioWrapper
                     }
                 }
 
+                #pragma warning disable CA1823
                 [StructLayout(LayoutKind.Explicit)]
                 public struct PROPVARIANTunion
                 {
                     [FieldOffset(0)]
                     public int lVal;
+                    [FieldOffset(0)]
+                    public uint ulVal;
                     [FieldOffset(0)]
                     public ulong uhVal;
                     [FieldOffset(0)]
@@ -156,6 +166,7 @@ namespace VolumeControl.AudioWrapper
                     [FieldOffset(0)]
                     public IntPtr puuid;
                 }
+                #pragma warning restore CA1823
 
                 [Guid("A95664D2-9614-4F35-A746-DE8DB63617E6"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
                 public interface IMMDeviceEnumerator
@@ -173,7 +184,7 @@ namespace VolumeControl.AudioWrapper
                     int RegisterEndpointNotificationCallback(IMMNotificationClient pClient);
 
                     [PreserveSig]
-                    int UnregisterEndpointNotificationCallback(IMMNotificationClient pClient);
+                    int UnregisterEndpointNotificationCazllback(IMMNotificationClient pClient);
                 }
 
                 [Guid("7991EEC9-7E89-4D85-8390-6C703CEC60C0"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
@@ -404,7 +415,7 @@ namespace VolumeControl.AudioWrapper
                     int GetMute(out bool pbMute);
                 }
 
-                [DllImport("Kernel32.dll")]
+                [DllImport("Kernel32.dll", CharSet = CharSet.Unicode)]
                 [return: MarshalAs(UnmanagedType.Bool)]
                 public static extern bool QueryFullProcessImageName([In] IntPtr hProcess, [In] uint dwFlags, [Out] StringBuilder lpExeName, [In, Out] ref int lpdwSize);
             }

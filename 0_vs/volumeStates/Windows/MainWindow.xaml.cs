@@ -12,10 +12,11 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Globalization;
 
 namespace VolumeStates
 {
-    public partial class MainWindow : Window, INotifyPropertyChanged
+    public partial class MainWindow : Window, INotifyPropertyChanged, IDisposable
     {
         #region members
         public event PropertyChangedEventHandler PropertyChanged;
@@ -34,18 +35,18 @@ namespace VolumeStates
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("CurrentAudioReflection"));
             }
         }
-        HotkeyCollection hotkeys = null;
+        HotkeyMappings hotkeys = null;
         #endregion
 
         public MainWindow()
         {
             InitializeComponent();
             this.DataContext = this;
-            hotkeys = new HotkeyCollection(() => CurrentAudioReflection);
+            hotkeys = new HotkeyMappings(() => CurrentAudioReflection);
 
             RefreshAudioDevices();
         }
-
+        
         #region audio data
         public void RefreshAudioDevices()
         {
@@ -161,6 +162,7 @@ namespace VolumeStates
         #endregion
 
         #region FFXIV connection
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "FFXIVIs")]
         public bool FFXIVIsConnecting {
             get
             {
@@ -183,11 +185,11 @@ namespace VolumeStates
             }
         }
 
-        private bool isInCutsceneFlag = false;
-        public bool IsInCutsceneFlag { get => isInCutsceneFlag;
+        private bool isInCutscene = false;
+        public bool IsInCutscene { get => isInCutscene;
             set
             {
-                isInCutsceneFlag = value;
+                isInCutscene = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsInCutsceneFlag"));
             }
         }
@@ -213,7 +215,7 @@ namespace VolumeStates
             get => statusBarText;
             set
             {
-                statusBarText = DateTime.Now.ToString("[yyyy-MM-dd HH:mm:ss] ") + value;
+                statusBarText = DateTime.Now.ToString("[yyyy-MM-dd HH:mm:ss] ", CultureInfo.InvariantCulture) + value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("StatusBarText"));
             }
         }
@@ -226,7 +228,7 @@ namespace VolumeStates
         {
             currentProcessType = e.CurrentProcess;
 
-            StatusBarText = string.Format("Status: {0} ({1} / {2}) | Progress: {3}%", e.CurrentProcess, ((int)e.CurrentProcess) + 1, (int)FFXIVCutsceneFlagWatcher.StatusUpdate.ProcessType.COUNT,  (int)(e.ProcessPercentage * 100));
+            StatusBarText = string.Format(CultureInfo.CurrentCulture, "Status: {0} ({1} / {2}) | Progress: {3}%", e.CurrentProcess, ((int)e.CurrentProcess) + 1, (int)FFXIVCutsceneFlagWatcher.StatusUpdate.ProcessType.COUNT,  (int)(e.ProcessPercentage * 100));
 
             if (e.CurrentProcess == FFXIVCutsceneFlagWatcher.StatusUpdate.ProcessType.Done)
             {
@@ -251,8 +253,8 @@ namespace VolumeStates
                 statusUpdate = new Progress<FFXIVCutsceneFlagWatcher.StatusUpdate>();
                 statusUpdate.ProgressChanged += OnFFXIVConnectionUpdate;
                 cutsceneWatcher = new FFXIVCutsceneFlagWatcher(statusUpdate);
-                Debug.Assert(cutsceneWatcher.CanWatch(), "Cutscene watcher couldn't establish connection to FFXIV");
-                cutsceneWatcher.StartWatcher((bool isWatchingCutscene) =>
+
+                if (!cutsceneWatcher.StartWatcher((bool isWatchingCutscene) =>
                 {
                     if (isWatchingCutscene)
                     {
@@ -283,8 +285,11 @@ namespace VolumeStates
                         }
                     }
 
-                    IsInCutsceneFlag = isWatchingCutscene;
-                });
+                    IsInCutscene = isWatchingCutscene;
+                }))
+                {
+                    Debug.Assert(false, "Cutscene watcher couldn't establish connection to FFXIV");
+                }
             });
         }
 
@@ -293,7 +298,7 @@ namespace VolumeStates
             cutsceneWatcher.StopWatcher();
             cutsceneWatcher = null;
             IsConnectedToGame = false;
-            IsInCutsceneFlag = false;
+            IsInCutscene = false;
 
             StatusBarText = "Successfully disconnected from game client";
         }
@@ -365,6 +370,7 @@ namespace VolumeStates
             return FFXIVSettings;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "FFXIV")]
         public bool DeserializeFFXIVSettings(dynamic FFXIVSettingsBlob)
         {
             if (FFXIVSettingsBlob == null)
@@ -398,22 +404,11 @@ namespace VolumeStates
             root.Add("FFXIV", SerializeFFXIVSettings());
             return root;
         }
-        public bool Deserialize(string jsonBlob)
+
+        public void DeserializeApps(dynamic states)
         {
-            dynamic deserializedJson = JsonConvert.DeserializeObject(jsonBlob);
-
-            if (deserializedJson.version != JSONVersion)
-            {
-                return false;
-            }
-
-            DeserializeFFXIVSettings(deserializedJson.FFXIV);
-
-            CurrentAudioReflection.FadeInMS = deserializedJson.fadeInMS;
-            FadeSpeedInMS.Text = CurrentAudioReflection.FadeInMS.ToString();
-
             hotkeys.ClearMappings();
-            foreach (var entry in deserializedJson.states)
+            foreach (var entry in states)
             {
                 Dictionary<string, float> appDefinitions = new Dictionary<string, float>();
                 foreach (var app in entry.apps)
@@ -428,6 +423,23 @@ namespace VolumeStates
                 );
             }
             hotkeys.EnableAllHotkeys();
+        }
+
+        public bool Deserialize(string jsonBlob)
+        {
+            dynamic deserializedJson = JsonConvert.DeserializeObject(jsonBlob);
+
+            if (deserializedJson.version != JSONVersion)
+            {
+                return false;
+            }
+
+            CurrentAudioReflection.FadeInMS = deserializedJson.fadeInMS;
+            FadeSpeedInMS.Text = CurrentAudioReflection.FadeInMS.ToString(CultureInfo.InvariantCulture);
+
+            DeserializeFFXIVSettings(deserializedJson.FFXIV);
+
+            DeserializeApps(deserializedJson.states);
 
             return true;
         }
@@ -454,6 +466,25 @@ namespace VolumeStates
         private void OnMainWindowLoaded(object sender, RoutedEventArgs e)
         {
             RestoreFromUserSettings();
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                // free managed resources
+                if (cutsceneWatcher != null)
+                {
+                    cutsceneWatcher.Dispose();
+                    cutsceneWatcher = null;
+                }
+            }
         }
     }
 }

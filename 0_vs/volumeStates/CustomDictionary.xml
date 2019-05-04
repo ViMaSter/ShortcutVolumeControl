@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Dictionary xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="CodeAnalysisDictionary.xsd">
+  <Words>
+    <Recognized>
+      <Word>Cutscene</Word>
+      <Word>ReadProcessMemory</Word>
+      <Word>VirtualQueryEx</Word>
+      <Word>FFXIV</Word>
+      <Word>Settings</Word>
+      <Word>Blob</Word>
+    </Recognized>
+  </Words>
+  <Acronyms>
+    <CasingExceptions>
+      <Acronym>FFXIV</Acronym>
+    </CasingExceptions>
+  </Acronyms>
+</Dictionary>
