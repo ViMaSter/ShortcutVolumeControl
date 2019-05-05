@@ -3,15 +3,40 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Resources;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace VolumeStates
 {
     class FFXIVCutsceneFlagWatcher : IDisposable
     {
+        private class SafeProcessHandle : Microsoft.Win32.SafeHandles.SafeHandleZeroOrMinusOneIsInvalid
+        {
+            private static class NativeMethods
+            {
+                [DllImport("kernel32.dll", SetLastError = true)]
+                [return: MarshalAs(UnmanagedType.Bool)]
+                public static extern bool CloseHandle(IntPtr handle);
+            }
+
+            private SafeProcessHandle() : base(true) {}
+
+            protected override bool ReleaseHandle()
+            {
+                if (!this.IsInvalid)
+                {
+                    if (!NativeMethods.CloseHandle(this.handle))
+                        throw new System.ComponentModel.Win32Exception();
+                    this.handle = IntPtr.Zero;
+                }
+                return true;
+            }
+        }
+
         private static class NativeMethods
         {
             public const int PROCESS_QUERY_INFORMATION = 0x0400;
@@ -73,17 +98,17 @@ namespace VolumeStates
             }
 
             [DllImport("kernel32.dll")]
-            public static extern SafeHandle OpenProcess(int dwDesiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, int dwProcessId);
+            public static extern SafeProcessHandle OpenProcess(int dwDesiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, int dwProcessId);
 
             [DllImport("kernel32.dll", SetLastError = true)]
             [return: MarshalAs(UnmanagedType.Bool)]
-            public static extern bool ReadProcessMemory(SafeHandle hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, IntPtr dwSize, ref int lpNumberOfBytesRead);
+            public static extern bool ReadProcessMemory(SafeProcessHandle hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, IntPtr dwSize, ref int lpNumberOfBytesRead);
 
             [DllImport("kernel32.dll")]
             public static extern void GetSystemInfo(out SYSTEM_INFO lpSystemInfo);
 
             [DllImport("kernel32.dll", SetLastError = true)]
-            public static extern UIntPtr VirtualQueryEx(SafeHandle hProcess, IntPtr lpAddress, out MEMORY_BASIC_INFORMATION lpBuffer, UIntPtr dwLength);
+            public static extern UIntPtr VirtualQueryEx(SafeProcessHandle hProcess, IntPtr lpAddress, out MEMORY_BASIC_INFORMATION lpBuffer, UIntPtr dwLength);
         }
 
         static long SearchBytes(byte[] haystack, byte[] needle, long startOffset, int alignment)
@@ -132,7 +157,15 @@ namespace VolumeStates
                 // 28 = sizeof(NativeMethods.MEMORY_BASIC_INFORMATION)
                 NativeMethods.VirtualQueryEx(processHandle, proc_min_address, out mem_basic_info, new UIntPtr(48));
                 int errorCode = Marshal.GetLastWin32Error();
-                if (errorCode != 0)
+                if (errorCode == 0)
+                {
+                    // intentionally void
+                }
+                else if (errorCode == 299)
+                {
+                    Trace.WriteLine("Couldn't read entire memory...");
+                }
+                else
                 {
                     throw new Win32Exception(errorCode, "Unhandled win32 API error calling VirtualQueryEx()");
                 }
@@ -158,13 +191,15 @@ namespace VolumeStates
             return areas;
         }
 
-        private bool FindNeedleInMemory(List<NativeMethods.MEMORY_BASIC_INFORMATION> areas, int alignmentHint, byte[] needle, out long relativeByteOffset, out NativeMethods.MEMORY_BASIC_INFORMATION memoryPage)
+        private bool FindNeedleInMemory(List<NativeMethods.MEMORY_BASIC_INFORMATION> areas, int alignmentHint, Needle memoryNeedle, out long relativeByteOffset, out NativeMethods.MEMORY_BASIC_INFORMATION memoryPage, StatusUpdate.ProcessType updateType)
         {
-            currentStatus.Report(new StatusUpdate { CurrentProcess = StatusUpdate.ProcessType.ParsingMemory, ProcessPercentage = 0.0f });
+            byte[] needle = new byte[] { (byte)memoryNeedle, 0x00, 0x00, 0x00, 0xCC, 0xCC, 0xCC, 0x3D, 0x00 };
+
+            currentStatus.Report(new StatusUpdate { CurrentProcess = updateType, ProcessPercentage = 0.0f });
 
             for (int i = 0; i < areas.Count; i++)
             {
-                currentStatus.Report(new StatusUpdate { CurrentProcess = StatusUpdate.ProcessType.ParsingMemory, ProcessPercentage = i / (float)areas.Count });
+                currentStatus.Report(new StatusUpdate { CurrentProcess = updateType, ProcessPercentage = i / (float)areas.Count });
                 var area = areas[i];
                 byte[] buffer = new byte[area.RegionSize.ToInt64()];
                 int bytesRead = 0;
@@ -173,19 +208,7 @@ namespace VolumeStates
                     int errorCode = Marshal.GetLastWin32Error();
                     if (errorCode == 299)
                     {
-                        Trace.WriteLine("Couldn't read entire memory; retrying...");
-                        if (NativeMethods.ReadProcessMemory(processHandle, area.BaseAddress, buffer, area.RegionSize, ref bytesRead) == false)
-                        {
-                            int errorCodeSecondTry = Marshal.GetLastWin32Error();
-                            if (errorCodeSecondTry == 299)
-                            {
-                                Trace.WriteLine("Couldn't read entire memory again... Continuing...");
-                            }
-                            else
-                            {
-                                throw new Win32Exception(errorCode, "Unhandled win32 API error calling ReadProcessMemory()");
-                            }
-                        }
+                        Trace.WriteLine("Couldn't read entire memory...");
                     }
                     else
                     {
@@ -217,7 +240,7 @@ namespace VolumeStates
             return false;
         }
 
-        SafeHandle processHandle = null;
+        SafeProcessHandle processHandle = null;
         long activeRelativeByteOffset = -1;
         NativeMethods.MEMORY_BASIC_INFORMATION activeMemoryPage = new NativeMethods.MEMORY_BASIC_INFORMATION();
 
@@ -227,14 +250,21 @@ namespace VolumeStates
             {
                 ConnectingToProcess = 0,
                 ReadingMemory,
-                ParsingMemory,
-                Done,
-                COUNT
+                ParsingMemoryOutOfCutscene,
+                ParsingMemoryInCutscene,
+                ParsingMemoryOutOfCutsceneAttempt2,
+                Done
             };
 
             public float ProcessPercentage { get; set; }
             public ProcessType CurrentProcess { get; set; }
             public bool ReadyToWatch { get; set; } = false;
+        }
+
+        enum Needle : byte
+        {
+            OutOfCutScene = 0x00,
+            InCutScene = 0x01
         }
 
         IProgress<StatusUpdate> currentStatus;
@@ -243,24 +273,49 @@ namespace VolumeStates
             currentStatus = cutsceneStatus;
             currentStatus.Report(new StatusUpdate { CurrentProcess = StatusUpdate.ProcessType.ConnectingToProcess, ProcessPercentage = 0.0f });
 
+            Process[] ffxivProcesses = Process.GetProcessesByName("ffxiv_dx11");
+            if (ffxivProcesses.Length <= 0)
+            {
+                ffxivProcesses = Process.GetProcessesByName("ffxiv");
+            }
+            if (ffxivProcesses.Length <= 0)
+            {
+                currentStatus.Report(new StatusUpdate { CurrentProcess = StatusUpdate.ProcessType.Done, ProcessPercentage = 0.0f });
+                return;
+            }
+
             Process process = Process.GetProcessesByName("ffxiv_dx11")[0];
             processHandle = NativeMethods.OpenProcess(NativeMethods.PROCESS_QUERY_INFORMATION | NativeMethods.PROCESS_WM_READ, false, process.Id);
 
-            // getting minimum & maximum address
-            FindNeedleInMemory(FetchMemoryPages(), 8, new byte[] { 0x00, 0x00, 0x00, 0x00, 0xCC, 0xCC, 0xCC, 0x3D, 0x00 }, out activeRelativeByteOffset, out activeMemoryPage);
+            // This is rather plain, but the most efficient way to scan the memory at this time:
+            // If we were to search directly for [0x00, 0x00, 0xCC, 0xCC, 0xCC, 0x3D, 0x00]
+            //  (dropping the 0x00/0x01 initial flag), we would loose the ability to specify the byte-alignment
+            // Scanning each byte is more costly than just scanning every 8th byte 3 times in a row
+            //  (which only occurs, if a user starts the tool in a cutscene and finishes it before the tool is done scanning)
+            List<NativeMethods.MEMORY_BASIC_INFORMATION> memoryPages = FetchMemoryPages();
+            if (!FindNeedleInMemory(memoryPages, 8, Needle.OutOfCutScene, out activeRelativeByteOffset, out activeMemoryPage, StatusUpdate.ProcessType.ParsingMemoryOutOfCutscene))
+            {
+                // ...scan for a running cutscene...
+                if (!FindNeedleInMemory(memoryPages, 8, Needle.InCutScene, out activeRelativeByteOffset, out activeMemoryPage, StatusUpdate.ProcessType.ParsingMemoryInCutscene))
+                {
+                    // ...and one last time for no running cutscene
+                    FindNeedleInMemory(memoryPages, 8, Needle.OutOfCutScene, out activeRelativeByteOffset, out activeMemoryPage, StatusUpdate.ProcessType.ParsingMemoryOutOfCutsceneAttempt2);
+                }
+            }
         }
 
         #region watcher
         private bool CanWatch()
         {
-            return !processHandle.IsInvalid && activeRelativeByteOffset != -1;
+            return processHandle != null && !processHandle.IsInvalid && activeRelativeByteOffset != -1;
         }
 
         bool isInCutscene = false;
         CancellationTokenSource tokenSource = new CancellationTokenSource();
         CancellationToken token;
+        Action<bool> currentCallbackFunction = null;
 
-        private void watchProcess(Action<bool> callbackFunction)
+        private void watchProcess()
         {
             int bytesRead = 0;
             byte[] cutsceneEnabledMemory = { 0xff };
@@ -268,22 +323,24 @@ namespace VolumeStates
             {
                 Debug.Assert(false, "Reading process memory failed");
                 StopWatcher();
+                return;
             }
             Debug.Assert(cutsceneEnabledMemory[0] == 0x00 || cutsceneEnabledMemory[0] == 0x01, "Cutscene flag has an invariant value");
-            Debug.Assert(bytesRead == 0, "Unable to read byte from designated memory");
+            Debug.Assert(bytesRead == 1, "Unable to read byte from designated memory");
             bool newValue = cutsceneEnabledMemory[0] == 0x01;
             if (isInCutscene != newValue)
             {
-                callbackFunction.Invoke(newValue);
+                currentCallbackFunction.Invoke(newValue);
                 isInCutscene = newValue;
             }
         }
         public bool StartWatcher(Action<bool> callbackFunction)
         {
+            currentCallbackFunction = callbackFunction;
             token = tokenSource.Token;
             if (!CanWatch())
             {
-                Debug.Assert(CanWatch(), "Watcher cannot start, as no qualifying memory has been found");
+                MessageBox.Show(Properties.Resources.COULDNT_FIND_MEMORY_LOCATION_CONTENT, Properties.Resources.COULDNT_FIND_MEMORY_LOCATION_TITLE, MessageBoxButton.OK);
                 return false;
             }
 
@@ -291,7 +348,7 @@ namespace VolumeStates
             {
                 while (!token.IsCancellationRequested)
                 {
-                    watchProcess(callbackFunction);
+                    watchProcess();
                     await Task.Delay(500);
                 }
             });
@@ -302,10 +359,17 @@ namespace VolumeStates
         public void StopWatcher()
         {
             tokenSource.Cancel();
+            if (isInCutscene == true && currentCallbackFunction != null)
+            {
+                currentCallbackFunction.Invoke(false);
+            }
+            currentStatus.Report(new StatusUpdate { CurrentProcess = StatusUpdate.ProcessType.Done, ProcessPercentage = 0.0f, ReadyToWatch = false });
+            isInCutscene = false;
         }
 
         public void Dispose()
         {
+            processHandle.Dispose();
             tokenSource.Dispose();
             GC.SuppressFinalize(this);
         }

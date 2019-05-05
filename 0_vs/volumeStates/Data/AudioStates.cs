@@ -34,7 +34,7 @@ namespace VolumeControl.States
         private int fadeInMS = 250;
         public int FadeInMS { get => fadeInMS; set => fadeInMS = value; }
 
-        public AppStatus ToState()
+        public AppStatus ToStatus()
         {
             Dictionary<string, float> appDefinitions = new Dictionary<string, float>();
             foreach (var session in SessionToThumbnail.Keys)

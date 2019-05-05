@@ -14,6 +14,9 @@ namespace VolumeControl.AudioWrapper
         {
             public static class NativeMethods
             {
+                public const uint AUDCLNT_S_NO_SINGLE_PROCESS = 0x0889000d;
+                public const uint ERROR_NO_SUCH_DEVINST = 0xe000020b;
+
                 [Flags]
                 public enum ProcessAccessFlags : uint
                 {
@@ -457,6 +460,10 @@ namespace VolumeControl.AudioWrapper
                         {
                             NativeMethods.PROPVARIANT value = new NativeMethods.PROPVARIANT();
                             int errorCode = store.GetValue(ref pk, ref value);
+                            if ((uint)errorCode == NativeMethods.ERROR_NO_SUCH_DEVINST)
+                            {
+                                continue;
+                            }
                             Debug.Assert(errorCode == 0, "Error obtaining information from windows API - error code: " + errorCode);
                             object v = value.GetValue();
                             if (value.vt != NativeMethods.VARTYPE.VT_BLOB) // for some reason, this fails?
@@ -652,7 +659,7 @@ namespace VolumeControl.AudioWrapper
                 CheckDisposed();
                 int i;
                 int errorCode = _ctl.GetProcessId(out i);
-                Debug.Assert(errorCode == 0, "Error obtaining information from windows API - error code: " + errorCode);
+                Debug.Assert(errorCode == 0 || (uint)errorCode == Utilities.NativeMethods.AUDCLNT_S_NO_SINGLE_PROCESS, "Error obtaining information from windows API - error code: " + errorCode);
                 return i;
             }
         }

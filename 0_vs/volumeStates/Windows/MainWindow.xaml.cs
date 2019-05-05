@@ -135,7 +135,7 @@ namespace VolumeStates
                 hotkeys.SetKeyPerState(
                     buttonListenModal.Modifiers,
                     buttonListenModal.PressedKey,
-                    CurrentAudioReflection.ToState()
+                    CurrentAudioReflection.ToStatus()
                 );
             }
             hotkeys.EnableAllHotkeys();
@@ -190,7 +190,7 @@ namespace VolumeStates
             set
             {
                 isInCutscene = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsInCutsceneFlag"));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsInCutscene"));
             }
         }
 
@@ -228,7 +228,7 @@ namespace VolumeStates
         {
             currentProcessType = e.CurrentProcess;
 
-            StatusBarText = string.Format(CultureInfo.CurrentCulture, "Status: {0} ({1} / {2}) | Progress: {3}%", e.CurrentProcess, ((int)e.CurrentProcess) + 1, (int)FFXIVCutsceneFlagWatcher.StatusUpdate.ProcessType.COUNT,  (int)(e.ProcessPercentage * 100));
+            StatusBarText = string.Format(CultureInfo.CurrentCulture, "Status: {0} / {1} | Progress: {2}%", ((int)e.CurrentProcess) + 1, (int)FFXIVCutsceneFlagWatcher.StatusUpdate.ProcessType.Done,  (int)(e.ProcessPercentage * 100));
 
             if (e.CurrentProcess == FFXIVCutsceneFlagWatcher.StatusUpdate.ProcessType.Done)
             {
@@ -254,7 +254,7 @@ namespace VolumeStates
                 statusUpdate.ProgressChanged += OnFFXIVConnectionUpdate;
                 cutsceneWatcher = new FFXIVCutsceneFlagWatcher(statusUpdate);
 
-                if (!cutsceneWatcher.StartWatcher((bool isWatchingCutscene) =>
+                cutsceneWatcher.StartWatcher((bool isWatchingCutscene) =>
                 {
                     if (isWatchingCutscene)
                     {
@@ -286,10 +286,7 @@ namespace VolumeStates
                     }
 
                     IsInCutscene = isWatchingCutscene;
-                }))
-                {
-                    Debug.Assert(false, "Cutscene watcher couldn't establish connection to FFXIV");
-                }
+                });
             });
         }
 

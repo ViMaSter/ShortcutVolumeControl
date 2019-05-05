@@ -61,6 +61,24 @@ namespace VolumeStates.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to connect to game client. The tool was unable to find the expected memory-pattern for the cutscene-flag. Ensure the game is running and the version of FFXIV is compatible with this tool..
+        /// </summary>
+        internal static string COULDNT_FIND_MEMORY_LOCATION_CONTENT {
+            get {
+                return ResourceManager.GetString("COULDNT_FIND_MEMORY_LOCATION_CONTENT", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No valid memory location.
+        /// </summary>
+        internal static string COULDNT_FIND_MEMORY_LOCATION_TITLE {
+            get {
+                return ResourceManager.GetString("COULDNT_FIND_MEMORY_LOCATION_TITLE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
         internal static System.Drawing.Icon Refresh {
