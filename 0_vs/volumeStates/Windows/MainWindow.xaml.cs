@@ -31,7 +31,7 @@ namespace VolumeStates
             set
             {
                 _currentAudioReflection = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("CurrentAudioReflection"));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentAudioReflection)));
             }
         }
         HotkeyMappings hotkeys = null;
@@ -86,7 +86,7 @@ namespace VolumeStates
                 }
             }
             CurrentAudioReflection = newReflection;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("CurrentAudioReflection"));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentAudioReflection)));
         }
 
         private void RefreshList(object sender, RoutedEventArgs e)
@@ -107,10 +107,13 @@ namespace VolumeStates
 
         public void OnPreviewFadeSpeedInput(object sender, RoutedEventArgs e)
         {
+            if (sender == null)
+            {
+                throw new ArgumentNullException(nameof(sender), Properties.Resources.OnPreviewFadeSpeedInput_OnPreviewFadeSpeedInput_shall_only_be_called_from_the_UI_and_therefore__sender__mustn_t_be_null);
+            }
             TextBox senderBox = (TextBox)sender;
 
-            int newValue;
-            if (!int.TryParse(senderBox.Text, out newValue))
+            if (!int.TryParse(senderBox.Text, out var newValue))
             {
                 if (e != null)
                 {
@@ -189,7 +192,7 @@ namespace VolumeStates
             set
             {
                 isInCutscene = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsInCutscene"));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsInCutscene)));
             }
         }
 
@@ -203,8 +206,8 @@ namespace VolumeStates
             set
             {
                 isConnectedToGame = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsConnectedToGame"));
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("FFXIVConnectionLabel"));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsConnectedToGame)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FFXIVConnectionLabel)));
             }
         }
 
@@ -215,7 +218,7 @@ namespace VolumeStates
             set
             {
                 statusBarText = DateTime.Now.ToString("[yyyy-MM-dd HH:mm:ss] ", CultureInfo.InvariantCulture) + value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("StatusBarText"));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(StatusBarText)));
             }
         }
 
@@ -235,7 +238,7 @@ namespace VolumeStates
                 StatusBarText = e.ReadyToWatch ? "Successfully connected to game client" : "Unable to connect to game client";
             }
 
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("FFXIVIsConnecting"));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FFXIVIsConnecting)));
         }
 
         private async Task ConnectToGame()
@@ -285,7 +288,7 @@ namespace VolumeStates
 
                     IsInCutscene = isWatchingCutscene;
                 });
-            });
+            }).ConfigureAwait(true);
         }
 
         private void DisconnectFromGame()
@@ -306,7 +309,7 @@ namespace VolumeStates
             }
             else
             {
-                await ConnectToGame();
+                await ConnectToGame().ConfigureAwait(true);
             }
         }
 
@@ -400,8 +403,13 @@ namespace VolumeStates
             return root;
         }
 
-        public void DeserializeApps(dynamic states)
+        public void DeserializePerAppVolumeStates(dynamic states)
         {
+            if (states == null)
+            {
+                throw new ArgumentNullException(nameof(states), Properties.Resources.DeserializePerAppVolumeStates__Cannot_deserialize_app_settings__provided_JSON_blob_is_null);
+            }
+
             hotkeys.ClearMappings();
             foreach (var entry in states)
             {
@@ -434,7 +442,7 @@ namespace VolumeStates
 
             DeserializeFFXIVSettings(deserializedJson.FFXIV);
 
-            DeserializeApps(deserializedJson.states);
+            DeserializePerAppVolumeStates(deserializedJson.states);
 
             return true;
         }

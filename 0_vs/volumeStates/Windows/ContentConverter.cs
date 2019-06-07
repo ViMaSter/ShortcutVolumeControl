@@ -61,11 +61,21 @@ namespace VolumeControl.Converter
         #region IValueConverter Members
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
+
             return ((int)Math.Round((GetDoubleValue(value, 0.0) * 100))) + "%";
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
+
             return double.Parse(((string)value).TrimEnd('%'), new NumberFormatInfo()) / 100;
         }
         #endregion

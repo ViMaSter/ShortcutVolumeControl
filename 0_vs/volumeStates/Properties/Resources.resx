@@ -127,4 +127,13 @@
   <data name="Refresh" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Refresh.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="DeserializePerAppVolumeStates: Cannot_deserialize_app_settings__provided_JSON_blob_is_null" xml:space="preserve">
+    <value>Cannot deserialize app settings; provided JSON blob is null</value>
+  </data>
+  <data name="OnPreviewFadeSpeedInput_OnPreviewFadeSpeedInput_shall_only_be_called_from_the_UI_and_therefore__sender__mustn_t_be_null" xml:space="preserve">
+    <value>OnPreviewFadeSpeedInput shall only be called from the UI and therefore 'sender' mustn't be null</value>
+  </data>
+  <data name="ApplyState_state_cannot_be_applied___invariant_supplied" xml:space="preserve">
+    <value>state cannot be applied - invariant supplied</value>
+  </data>
 </root>

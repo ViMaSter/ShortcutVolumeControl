@@ -55,16 +55,16 @@ namespace VolumeStates.AudioWrapper
                 [Flags]
                 public enum CLSCTX
                 {
-                    CLSCTX_INPROC_SERVER = 0x1,
-                    CLSCTX_INPROC_HANDLER = 0x2,
-                    CLSCTX_LOCAL_SERVER = 0x4,
-                    CLSCTX_REMOTE_SERVER = 0x10,
-                    CLSCTX_ALL = CLSCTX_INPROC_SERVER | CLSCTX_INPROC_HANDLER | CLSCTX_LOCAL_SERVER | CLSCTX_REMOTE_SERVER
+                    INPROC_SERVER = 0x1,
+                    INPROC_HANDLER = 0x2,
+                    LOCAL_SERVER = 0x4,
+                    REMOTE_SERVER = 0x10,
+                    ALL = INPROC_SERVER | INPROC_HANDLER | LOCAL_SERVER | REMOTE_SERVER
                 }
 
                 public enum STGM
                 {
-                    STGM_READ = 0x00000000,
+                    READ = 0x00000000,
                 }
 
                 public enum EDataFlow
@@ -98,7 +98,7 @@ namespace VolumeStates.AudioWrapper
 
                     public override string ToString()
                     {
-                        return fmtid.ToString("B") + " " + pid;
+                        return fmtid.ToString("B", CultureInfo.InvariantCulture) + " " + pid;
                     }
                 }
 
@@ -443,16 +443,13 @@ namespace VolumeStates.AudioWrapper
                     return null;
 
                 string id;
-                dev.GetId(out id);
-                NativeMethods.DEVICE_STATE state;
-                dev.GetState(out state);
+                Marshal.ThrowExceptionForHR(dev.GetId(out id));
+                Marshal.ThrowExceptionForHR(dev.GetState(out var state));
                 Dictionary<string, object> properties = new Dictionary<string, object>();
-                NativeMethods.IPropertyStore store;
-                dev.OpenPropertyStore(NativeMethods.STGM.STGM_READ, out store);
+                Marshal.ThrowExceptionForHR(dev.OpenPropertyStore(NativeMethods.STGM.READ, out var store));
                 if (store != null)
                 {
-                    int propCount;
-                    store.GetCount(out propCount);
+                    Marshal.ThrowExceptionForHR(store.GetCount(out var propCount));
                     for (int j = 0; j < propCount; j++)
                     {
                         NativeMethods.PROPERTYKEY pk;
@@ -499,16 +496,16 @@ namespace VolumeStates.AudioWrapper
                     return list;
 
                 NativeMethods.IMMDeviceCollection collection;
-                deviceEnumerator.EnumAudioEndpoints(NativeMethods.EDataFlow.eRender, NativeMethods.DEVICE_STATE.MASK_ALL, out collection);
+                Marshal.ThrowExceptionForHR(deviceEnumerator.EnumAudioEndpoints(NativeMethods.EDataFlow.eRender, NativeMethods.DEVICE_STATE.MASK_ALL, out collection));
                 if (collection == null)
                     return list;
 
                 int count;
-                collection.GetCount(out count);
+                Marshal.ThrowExceptionForHR(collection.GetCount(out count));
                 for (int i = 0; i < count; i++)
                 {
                     NativeMethods.IMMDevice dev;
-                    collection.Item(i, out dev);
+                    Marshal.ThrowExceptionForHR(collection.Item(i, out dev));
                     if (dev != null)
                     {
                         list.Add(CreateDevice(dev));
@@ -526,27 +523,27 @@ namespace VolumeStates.AudioWrapper
             {
                 if (device == null)
                 {
-                    throw new ArgumentNullException("device");
+                    throw new ArgumentNullException(nameof(device));
                 }
 
                 List<AudioSession> list = new List<AudioSession>();
                 NativeMethods.IMMDeviceEnumerator deviceEnumerator = (NativeMethods.IMMDeviceEnumerator)(new NativeMethods.MMDeviceEnumerator());
                 NativeMethods.IMMDevice immDevice;
-                deviceEnumerator.GetDevice(device.Id, out immDevice);
+                Marshal.ThrowExceptionForHR(deviceEnumerator.GetDevice(device.Id, out immDevice));
                 Debug.Assert(immDevice != null, "Unable to retrieve IMMDevice with EnumeratorName of AudioDevice");
                 NativeMethods.IAudioSessionManager2 mgr = GetAudioSessionManager(immDevice);
                 if (mgr == null)
                     return list;
 
                 NativeMethods.IAudioSessionEnumerator sessionEnumerator;
-                mgr.GetSessionEnumerator(out sessionEnumerator);
+                Marshal.ThrowExceptionForHR(mgr.GetSessionEnumerator(out sessionEnumerator));
                 int count;
-                sessionEnumerator.GetCount(out count);
+                Marshal.ThrowExceptionForHR(sessionEnumerator.GetCount(out count));
 
                 for (int i = 0; i < count; i++)
                 {
                     NativeMethods.IAudioSessionControl ctl;
-                    sessionEnumerator.GetSession(i, out ctl);
+                    Marshal.ThrowExceptionForHR(sessionEnumerator.GetSession(i, out ctl));
                     if (ctl == null)
                         continue;
 
@@ -590,14 +587,14 @@ namespace VolumeStates.AudioWrapper
             _ctl = ctl;
             _sav = sav;
             classInstance = new UpdateClass(this);
-            _ctl.RegisterAudioSessionNotification(classInstance);
+            Marshal.ThrowExceptionForHR(_ctl.RegisterAudioSessionNotification(classInstance));
         }
 
         ~AudioSession()
         {
             if (classInstance != null)
             {
-                _ctl.UnregisterAudioSessionNotification(classInstance);
+                Marshal.ThrowExceptionForHR(_ctl.UnregisterAudioSessionNotification(classInstance));
             }
         }
 
@@ -728,20 +725,16 @@ namespace VolumeStates.AudioWrapper
             get
             {
                 CheckDisposed();
-                string s;
-                int errorCode = _ctl.GetDisplayName(out s);
-                Debug.Assert(errorCode == 0, "Error obtaining information from windows API - error code: " + errorCode);
+                Marshal.ThrowExceptionForHR(_ctl.GetDisplayName(out string s));
                 return s;
             }
             set
             {
                 CheckDisposed();
-                string s;
-                int errorCode = _ctl.GetDisplayName(out s);
-                Debug.Assert(errorCode == 0, "Error obtaining information from windows API - error code: " + errorCode);
+                Marshal.ThrowExceptionForHR(_ctl.GetDisplayName(out string s));
                 if (s != value)
                 {
-                    _ctl.SetDisplayName(value, Guid.Empty);
+                    Marshal.ThrowExceptionForHR(_ctl.SetDisplayName(value, Guid.Empty));
                 }
             }
         }
@@ -762,7 +755,7 @@ namespace VolumeStates.AudioWrapper
                 CheckDisposed();
                 int errorCode = _sav.SetMasterVolume(value, Guid.Empty);
                 Debug.Assert(errorCode == 0, "Error setting information using windows API - error code: " + errorCode);
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Volume"));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Volume)));
             }
         }
 
@@ -818,6 +811,9 @@ namespace VolumeStates.AudioWrapper
                 Marshal.ReleaseComObject(_ctl);
                 _ctl = null;
             }
+
+            _process?.Dispose();
+
             GC.SuppressFinalize(this);
         }
     }

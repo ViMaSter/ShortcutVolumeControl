@@ -39,6 +39,7 @@ namespace VolumeStates
 
         private static class NativeMethods
         {
+#pragma warning disable CA1823
             public const int PROCESS_QUERY_INFORMATION = 0x0400;
             public const int PROCESS_WM_READ = 0x0010;
 
@@ -96,6 +97,7 @@ namespace VolumeStates
                 public ushort processorLevel;
                 public ushort processorRevision;
             }
+#pragma warning restore CA1823
 
             [DllImport("kernel32.dll")]
             public static extern SafeProcessHandle OpenProcess(int dwDesiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, int dwProcessId);
@@ -157,17 +159,17 @@ namespace VolumeStates
                 // 28 = sizeof(NativeMethods.MEMORY_BASIC_INFORMATION)
                 NativeMethods.VirtualQueryEx(processHandle, proc_min_address, out mem_basic_info, new UIntPtr(48));
                 int errorCode = Marshal.GetLastWin32Error();
-                if (errorCode == 0)
+                switch (errorCode)
                 {
-                    // intentionally void
-                }
-                else if (errorCode == 299)
-                {
-                    Trace.WriteLine("Couldn't read entire memory...");
-                }
-                else
-                {
-                    throw new Win32Exception(errorCode, "Unhandled win32 API error calling VirtualQueryEx()");
+                    case 0:
+                        // intentionally void
+                        break;
+                    case 299:
+                        Trace.WriteLine("Couldn't read entire memory...");
+                        break;
+                    default:
+                        Marshal.ThrowExceptionForHR(errorCode);
+                        break;
                 }
 
                 // if this memory chunk is accessible
@@ -212,7 +214,7 @@ namespace VolumeStates
                     }
                     else
                     {
-                        throw new Win32Exception(errorCode, "Unhandled win32 API error calling ReadProcessMemory()");
+                        Marshal.ThrowExceptionForHR(errorCode);
                     }
                 }
 
@@ -344,14 +346,14 @@ namespace VolumeStates
                 return false;
             }
 
-            Task.Factory.StartNew(async () =>
+            Task.Run(async () =>
             {
                 while (!token.IsCancellationRequested)
                 {
                     watchProcess();
-                    await Task.Delay(500);
+                    await Task.Delay(500).ConfigureAwait(true);
                 }
-            });
+            }, token);
 
             return true;
         }

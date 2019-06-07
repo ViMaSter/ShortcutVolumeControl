@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using VolumeStates.AudioWrapper;
+using VolumeStates.Properties;
 
 namespace VolumeStates.Data
 {
@@ -54,7 +55,7 @@ namespace VolumeStates.Data
         {
             if (state == null || state.ProcessPathToVolume == null)
             {
-                throw new InvalidCastException("state cannot be applied - invariant supplied");
+                throw new InvalidCastException(Resources.ApplyState_state_cannot_be_applied___invariant_supplied);
             }
 
             foreach (var definition in state.ProcessPathToVolume)
@@ -77,7 +78,7 @@ namespace VolumeStates.Data
                                 TimeSpan offset = endTime - DateTime.Now;
                                 double value = 1 - (offset.TotalMilliseconds / lerpDuration.TotalMilliseconds);
                                 session.Volume = (float)Lerp(startValue, endValue, value);
-                                await Task.Delay(((int)((float)1 / 60) * 1000));
+                                await Task.Delay(((int)((float)1 / 60) * 1000)).ConfigureAwait(true);
                             }
                             session.Volume = endValue;
                         }).ConfigureAwait(false);

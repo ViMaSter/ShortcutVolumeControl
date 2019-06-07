@@ -19,7 +19,7 @@ namespace VolumeStates.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -61,6 +61,15 @@ namespace VolumeStates.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to state cannot be applied - invariant supplied.
+        /// </summary>
+        internal static string ApplyState_state_cannot_be_applied___invariant_supplied {
+            get {
+                return ResourceManager.GetString("ApplyState_state_cannot_be_applied___invariant_supplied", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to connect to game client. The tool was unable to find the expected memory-pattern for the cutscene-flag. Ensure the game is running and the version of FFXIV is compatible with this tool..
         /// </summary>
         internal static string COULDNT_FIND_MEMORY_LOCATION_CONTENT {
@@ -75,6 +84,26 @@ namespace VolumeStates.Properties {
         internal static string COULDNT_FIND_MEMORY_LOCATION_TITLE {
             get {
                 return ResourceManager.GetString("COULDNT_FIND_MEMORY_LOCATION_TITLE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot deserialize app settings; provided JSON blob is null.
+        /// </summary>
+        internal static string DeserializePerAppVolumeStates__Cannot_deserialize_app_settings__provided_JSON_blob_is_null {
+            get {
+                return ResourceManager.GetString("DeserializePerAppVolumeStates: Cannot_deserialize_app_settings__provided_JSON_blo" +
+                        "b_is_null", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to OnPreviewFadeSpeedInput shall only be called from the UI and therefore &apos;sender&apos; mustn&apos;t be null.
+        /// </summary>
+        internal static string OnPreviewFadeSpeedInput_OnPreviewFadeSpeedInput_shall_only_be_called_from_the_UI_and_therefore__sender__mustn_t_be_null {
+            get {
+                return ResourceManager.GetString("OnPreviewFadeSpeedInput_OnPreviewFadeSpeedInput_shall_only_be_called_from_the_UI_" +
+                        "and_therefore__sender__mustn_t_be_null", resourceCulture);
             }
         }
         
