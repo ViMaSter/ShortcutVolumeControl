@@ -1,0 +1,48 @@
+﻿<Window x:Class="VolumeStates.GetPlaneModal"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:VolumeStates"
+        mc:Ignorable="d"
+        Title="Create plane" Height="257.665" Width="361.392" ResizeMode="NoResize" WindowStartupLocation="CenterOwner">
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="10*" />
+            <ColumnDefinition Width="1*" />
+            <ColumnDefinition Width="10*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="10*" />
+            <RowDefinition Height="3*" />
+        </Grid.RowDefinitions>
+
+        <Button Content="Yes" Grid.Column="0" Grid.Row="1" Click="OnYesClick"/>
+        <Button Content="No" Grid.Column="2" Grid.Row="1" Click="OnNoClick"/>
+        <Label Content="X1:" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+        <Label Content="Y1:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,26,0,0"/>
+        <Label Content="Z1:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,52,0,0"/>
+        <Label Content="X2:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,78,0,0"/>
+        <Label Content="Y2:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,104,0,0"/>
+        <Label Content="Z2:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,130,0,0"/>
+        <TextBox Name="X1" Grid.ColumnSpan="3" HorizontalAlignment="Left" Height="23" Margin="31,4,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="120"/>
+        <TextBox Name="Y1" Grid.ColumnSpan="3" HorizontalAlignment="Left" Height="23" Margin="31,29,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="120"/>
+        <TextBox Name="Z1" Grid.ColumnSpan="3" HorizontalAlignment="Left" Height="23" Margin="31,54,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="120"/>
+        <TextBox Name="X2" HorizontalAlignment="Left" Height="23" Margin="30,82,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="120"/>
+        <TextBox Name="Y2" HorizontalAlignment="Left" Height="23" Margin="30,108,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="120"/>
+        <TextBox Name="Z2" HorizontalAlignment="Left" Height="23" Margin="30,133,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="120"/>
+
+        <Label Grid.Column="2" Content="X3:" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+        <Label Grid.Column="2" Content="Y3:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,26,0,0"/>
+        <Label Grid.Column="2" Content="Z3:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,52,0,0"/>
+        <Label Grid.Column="2" Content="X4:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,78,0,0"/>
+        <Label Grid.Column="2" Content="Y4:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,104,0,0"/>
+        <Label Grid.Column="2" Content="Z4:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,130,0,0"/>
+        <TextBox Grid.Column="2" Name="X3" Grid.ColumnSpan="3" HorizontalAlignment="Left" Height="23" Margin="31,4,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="120"/>
+        <TextBox Grid.Column="2" Name="Y3" Grid.ColumnSpan="3" HorizontalAlignment="Left" Height="23" Margin="31,29,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="120"/>
+        <TextBox Grid.Column="2" Name="Z3" Grid.ColumnSpan="3" HorizontalAlignment="Left" Height="23" Margin="31,54,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="120"/>
+        <TextBox Grid.Column="2" Name="X4" HorizontalAlignment="Left" Height="23" Margin="30,82,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="120"/>
+        <TextBox Grid.Column="2" Name="Y4" HorizontalAlignment="Left" Height="23" Margin="30,108,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="120"/>
+        <TextBox Grid.Column="2" Name="Z4" HorizontalAlignment="Left" Height="23" Margin="30,134,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="120"/>
+    </Grid>
+</Window>

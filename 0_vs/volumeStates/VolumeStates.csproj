@@ -83,7 +83,7 @@
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
   </PropertyGroup>
   <PropertyGroup>
-    <SignAssembly>true</SignAssembly>
+    <SignAssembly>false</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>VolumeStateStrongNameKey.pfx</AssemblyOriginatorKeyFile>
@@ -119,9 +119,20 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Windows\GetPlaneModal.xaml.cs">
+      <DependentUpon>GetPlaneModal.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Windows\PositionTracking.xaml.cs">
+      <DependentUpon>PositionTracking.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Windows\PositionWatcher.cs" />
     <Page Include="Windows\ButtonListenModal.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Windows\GetPlaneModal.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Windows\ConnectToFFXIVWindow.xaml">
       <SubType>Designer</SubType>
@@ -150,6 +161,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Windows\PositionTracking.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Data\FFXIVCutsceneFlagWatcher.cs" />

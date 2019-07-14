@@ -77,6 +77,7 @@
                 <Label Padding="0" Content="{Binding Path=DataContext.StatusBarText}" />
             </StatusBar>
         </DockPanel>
+        <Button Content="Easter" Grid.Column="2" HorizontalAlignment="Left" Margin="58.5,113,0,0" Grid.Row="1" VerticalAlignment="Top" Width="75" Click="Button_Click"/>
         <!-- STATUSBAR  END  -->
     </Grid>
 </Window>
