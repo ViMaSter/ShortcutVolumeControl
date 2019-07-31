@@ -73,7 +73,7 @@ namespace VolumeStates
                 if (session.Process != null)
                 {
                     BitmapSource source = null;
-                    if (session.ProcessPath != null)
+                    if (!string.IsNullOrEmpty(session.ProcessPath))
                     {
                         System.Drawing.Icon icon = System.Drawing.Icon.ExtractAssociatedIcon(session.ProcessPath);
                         source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHIcon(
@@ -488,6 +488,13 @@ namespace VolumeStates
                     cutsceneWatcher = null;
                 }
             }
+        }
+
+        Windows.PositionTracking pos;
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            pos = new Windows.PositionTracking();
+            pos.Show();
         }
     }
 }
